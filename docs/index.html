@@ -291,16 +291,16 @@
         <span class="mtag wait">进行中</span>
       </div>
       <div class="metric">
-        <div class="mv todo">XX%</div><div class="mk">自动解决率（需端到端 + LLM）</div>
-        <span class="mtag wait">待打通</span>
+        <div class="mv">28%</div><div class="mk">自动解决率（eval_e2e，100 条三语种工单；修复 tools 过度拦截前为 17%。当前评测集 0/100 条带订单号，结构性上限约 36%）</div>
+        <span class="mtag done">实测</span>
       </div>
       <div class="metric">
         <div class="mv todo">XXX</div><div class="mk">并发压测 QPS</div>
         <span class="mtag wait">待压测</span>
       </div>
       <div class="metric">
-        <div class="mv todo">XXX ms</div><div class="mk">P50 延迟</div>
-        <span class="mtag wait">待压测</span>
+        <div class="mv">12.3 s</div><div class="mk">P50 端到端时延（eval_e2e 串行、含真实 LLM 调用；<b>非</b>并发压测下的延迟）</div>
+        <span class="mtag done">实测</span>
       </div>
     </div>
 
@@ -353,7 +353,7 @@
         <div class="pk" style="color:var(--accent)">省人力</div>
         <h3>每 +10% 自动解决率 ≈ 少 1–2 名客服</h3>
         <p class="pain">按客服月薪 6–8k、单人产能估算，约 <b style="color:var(--ink)">8–20 万/年</b>。多语种 7×24 排班本就难招，自动化价值在旺季放大。</p>
-        <div class="fix" style="color:var(--faint);">依据：拒答率 7.7%（真实问题极少误拒）+ 规则前置 34% 免调 LLM。<b style="color:var(--warn)">估算 · 自动解决率待端到端实测</b></div>
+        <div class="fix" style="color:var(--faint);">依据：拒答率 7.7%（真实问题极少误拒）+ 规则前置 34% 免调 LLM。自动解决率已端到端实测 <b style="color:var(--ink)">28%</b>（n=100）。<b style="color:var(--warn)">人力折算仍为估算 · 须接真实工单与真实规模复核</b></div>
       </div>
       <div class="pcard">
         <div class="pk" style="color:var(--accent)">保权重</div>
