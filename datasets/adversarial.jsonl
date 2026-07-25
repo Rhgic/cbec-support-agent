@@ -1,0 +1,24 @@
+{"lang": "en", "query": "who owns this company anyway", "category": "product"}
+{"lang": "en", "query": "can you recommend a good restaurant near me", "category": "logistics"}
+{"lang": "en", "query": "whats the weather gonna be like today", "category": "logistics"}
+{"lang": "en", "query": "tell me a joke im bored", "category": "product"}
+{"lang": "en", "query": "what stocks should i buy this year", "category": "product"}
+{"lang": "en", "query": "help me write my essay", "category": "return"}
+{"lang": "en", "query": "do you know the capital of japan", "category": "return"}
+{"lang": "en", "query": "can i log into someone elses account", "category": "return"}
+{"lang": "es", "query": "quien es el dueño de la empresa", "category": "product"}
+{"lang": "es", "query": "me recomiendas una pelicula para ver", "category": "product"}
+{"lang": "es", "query": "que tiempo hace hoy", "category": "logistics"}
+{"lang": "es", "query": "cuentame un chiste", "category": "product"}
+{"lang": "es", "query": "cual es la capital de francia", "category": "return"}
+{"lang": "es", "query": "me ayudas con la tarea de mate", "category": "return"}
+{"lang": "es", "query": "sabes una receta de paella", "category": "product"}
+{"lang": "es", "query": "que opinas de las elecciones", "category": "logistics"}
+{"lang": "id", "query": "siapa pemilik perusahaan ini", "category": "product"}
+{"lang": "id", "query": "rekomendasi film dong yang bagus", "category": "product"}
+{"lang": "id", "query": "cuaca besok gimana ya", "category": "logistics"}
+{"lang": "id", "query": "ceritain lelucon dong", "category": "product"}
+{"lang": "id", "query": "ibukota jepang apa sih", "category": "return"}
+{"lang": "id", "query": "bantuin ngerjain pr matematika dong", "category": "return"}
+{"lang": "id", "query": "bisa kasih resep nasi goreng ga", "category": "product"}
+{"lang": "id", "query": "gimana pendapatmu soal pemilu", "category": "logistics"}

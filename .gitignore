@@ -1,0 +1,22 @@
+# 虚拟环境
+.venv/
+venv/
+
+# 本地环境变量（含密钥，禁止提交）
+.env
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# 向量 / 数据集产物（由脚本生成，不入库）
+datasets/*.bin
+scripts/*.log
+
+# macOS
+.DS_Store
+
+# Milvus Lite 本地嵌入式库（运行时生成，勿入库）
+data/milvus_local.db/

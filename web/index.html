@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>跨境客服 · Agent 查验台</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="side-logo">境</div>
+      <nav class="side-nav">
+        <button class="side-item active" data-view="console" aria-label="查验台" title="查验台"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+        <button class="side-item" data-view="kb" aria-label="知识库" title="知识库"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a1 1 0 011-1h13v18H6a1 1 0 01-1-1z"/><path d="M9 3v18"/></svg></button>
+        <button class="side-item" data-view="metrics" aria-label="指标" title="指标"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></button>
+      </nav>
+    </aside>
+    <div class="app-body">
+
+  <header class="topbar">
+    <div class="brand-lines">
+      <h1>跨境客服 · Agent 查验台</h1>
+      <div class="sub">规则粗筛 → 多语种检索 → 工具调用 → 风险闸门</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="chips-inline">
+      <span class="ci">市场 <b>EN · ES · ID</b></span>
+      <span class="ci">护栏 <b>限流 · 配额 · 熔断</b></span>
+    </div>
+    <span class="feed"><span id="feed-dot" class="dot sample"></span><span id="feed-label">样例数据</span></span>
+  </header>
+
+  <div id="view-console" class="view">
+  <main class="shell">
+    <aside class="rail">
+      <section class="card">
+        <header><h2>新工单</h2></header>
+        <div class="body">
+          <textarea id="ticket-input" class="input" placeholder="粘贴任意市场语言的客户消息…"></textarea>
+          <div class="samples" id="samples">
+            <button class="chip" data-sc="logi">🇬🇧 where's my order</button>
+            <button class="chip" data-sc="refund">🇲🇽 reembolso $50</button>
+            <button class="chip" data-sc="oos">🇮🇩 cuaca besok</button>
+          </div>
+          <div class="run-row">
+            <button id="run" class="btn btn-primary">运行 Agent</button>
+            <span class="detected">识别语种 <b id="detected">—</b></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <header><h2>待查验队列</h2><span class="count" id="tk-count"></span></header>
+        <div class="tickets" id="tickets"></div>
+      </section>
+    </aside>
+
+    <section class="detail">
+      <div class="card" id="detail"></div>
+    </section>
+  </main>
+  </div>
+
+  <div id="view-kb" class="view" hidden>
+    <div class="view-wrap">
+      <div class="view-head"><h2>知识库</h2><p>Agent 检索的中文政策库 —— BGE-m3 跨语种检索的对象，共 15 篇。客户用任意语种提问，都在这套中文库里找依据。</p></div>
+      <div class="kb-grid">
+        <div class="kb-cat">
+          <div class="kb-cat-h"><span class="tk-dot low"></span>物流 <span class="mono">logistics</span></div>
+          <div class="kb-doc"><b>物流与配送常见问题</b><span>发货时效 · 轨迹不更新 · 清关滞留 · 显示签收未收到</span></div>
+          <div class="kb-doc"><b>发货与配送时效</b><span>处理时效 · 跨境时效 · 时效起算 · 加急</span></div>
+          <div class="kb-doc"><b>清关与关税</b><span>清关时长 · 关税由谁承担 · 收件人配合 · 清关失败</span></div>
+          <div class="kb-doc"><b>自提、地址修改与代收</b><span>改地址 · 自提取件 · 代收签收 · 改约派送</span></div>
+          <div class="kb-doc"><b>承运商与时效对照</b><span>承运商类型 · 时效对照 · 签收方式 · 轨迹语言</span></div>
+        </div>
+        <div class="kb-cat">
+          <div class="kb-cat-h"><span class="tk-dot mid"></span>退换货 <span class="mono">return</span></div>
+          <div class="kb-doc"><b>退换货政策</b><span>退货时限 · 退款时效 · 不支持退货情形 · 破损丢件</span></div>
+          <div class="kb-doc"><b>退款时效与方式</b><span>到账时间 · 退款金额 · 原路退回 · 部分退款</span></div>
+          <div class="kb-doc"><b>破损、丢件与错发</b><span>运输破损 · 包裹丢失 · 错发漏发 · 举证时限</span></div>
+          <div class="kb-doc"><b>质保与保内退换</b><span>质保期 · 保内换新 · 不在质保范围 · 申请材料</span></div>
+          <div class="kb-doc"><b>退货运费与寄回</b><span>运费承担 · 寄回方式 · 退货地址 · 到仓验收</span></div>
+        </div>
+        <div class="kb-cat">
+          <div class="kb-cat-h"><span class="tk-dot high"></span>产品 <span class="mono">product</span></div>
+          <div class="kb-doc"><b>产品常见问题</b><span>电池续航 · 防水等级 · 尺码规格 · 保修 · 材质保养</span></div>
+          <div class="kb-doc"><b>电池与供电</b><span>续航时间 · 充电时长 · 电压插头 · 电池保养</span></div>
+          <div class="kb-doc"><b>防水与尺寸</b><span>防水等级 · 尺码选择 · 尺寸重量 · 兼容性</span></div>
+          <div class="kb-doc"><b>使用与保养</b><span>首次使用 · 清洁保养 · 存放 · 常见误区</span></div>
+          <div class="kb-doc"><b>配件与兼容</b><span>随附配件 · 替换件耗材 · 兼容机型 · 转换插头</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-metrics" class="view" hidden>
+    <div class="view-wrap">
+      <div class="view-head"><h2>指标</h2><p>合成数据集上的实测结果（100 条多语种工单 / 22 有答案查询 / 24 对抗查询 / 34 条风险标注）。接入真实工单后需重跑复核。</p></div>
+      <div class="metrics-grid">
+        <div class="mcard"><div class="mv">0.45</div><div class="mk">检索短路阈值 · 曲线拐点</div></div>
+        <div class="mcard"><div class="mv">100%</div><div class="mk">高风险拦截召回</div></div>
+        <div class="mcard"><div class="mv">0%</div><div class="mk">对抗集无依据回答率</div></div>
+        <div class="mcard"><div class="mv">34%</div><div class="mk">规则前置省下的 LLM 调用</div></div>
+      </div>
+      <div class="card" style="padding:18px 18px 12px;">
+        <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px;font-size:12.5px;color:var(--muted);">
+          <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:16px;border-top:2px solid var(--hold);"></span>幻觉暴露（无答案却放行）</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:16px;border-top:2px dashed var(--check);"></span>误拒率（有答案却短路）</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;color:var(--link);">▲ 0.45 取值</span>
+        </div>
+        <svg viewBox="0 0 640 340" width="100%" role="img" aria-label="检索阈值扫描曲线：0.45 是误拒率与幻觉暴露率唯一同时为 0 的拐点" style="display:block;max-width:100%;">
+          <g style="stroke:var(--line);stroke-width:1;">
+            <line x1="44" y1="16" x2="620" y2="16"/><line x1="44" y1="88" x2="620" y2="88"/>
+            <line x1="44" y1="160" x2="620" y2="160"/><line x1="44" y1="232" x2="620" y2="232"/>
+            <line x1="44" y1="304" x2="620" y2="304"/>
+          </g>
+          <g style="fill:var(--faint);font-family:var(--mono);font-size:11px;" text-anchor="end">
+            <text x="38" y="20">80%</text><text x="38" y="92">60%</text><text x="38" y="164">40%</text>
+            <text x="38" y="236">20%</text><text x="38" y="307">0%</text>
+          </g>
+          <line x1="290.9" y1="16" x2="290.9" y2="304" style="stroke:var(--link);stroke-width:1.5;stroke-dasharray:4 4;"/>
+          <polyline fill="none" style="stroke:var(--hold);stroke-width:2;stroke-linejoin:round;" points="44,49.1 126.3,124 208.6,259 290.9,304 373.1,304 455.4,304 537.7,304 620,304"/>
+          <polyline fill="none" style="stroke:var(--check);stroke-width:2;stroke-linejoin:round;stroke-dasharray:6 4;" points="44,304 126.3,304 208.6,304 290.9,304 373.1,255 455.4,222.3 537.7,140.2 620,42.3"/>
+          <g style="fill:var(--hold);"><circle cx="44" cy="49.1" r="3"/><circle cx="126.3" cy="124" r="3"/><circle cx="208.6" cy="259" r="3"/></g>
+          <g style="fill:var(--check);"><circle cx="373.1" cy="255" r="3"/><circle cx="455.4" cy="222.3" r="3"/><circle cx="537.7" cy="140.2" r="3"/><circle cx="620" cy="42.3" r="3"/></g>
+          <circle cx="290.9" cy="304" r="4.5" style="fill:var(--surface);stroke:var(--link);stroke-width:2;"/>
+          <g style="fill:var(--faint);font-family:var(--mono);font-size:11px;" text-anchor="middle">
+            <text x="44" y="322">0.30</text><text x="126.3" y="322">0.35</text><text x="208.6" y="322">0.40</text>
+            <text x="290.9" y="322" style="fill:var(--link);font-weight:700;">0.45</text>
+            <text x="373.1" y="322">0.50</text><text x="455.4" y="322">0.55</text>
+            <text x="537.7" y="322">0.60</text><text x="620" y="322">0.65</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    (function () {
+      var items = document.querySelectorAll(".side-item[data-view]");
+      var views = { console: "view-console", kb: "view-kb", metrics: "view-metrics" };
+      items.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          items.forEach(function (b) { b.classList.remove("active"); });
+          btn.classList.add("active");
+          var v = btn.dataset.view;
+          Object.keys(views).forEach(function (k) {
+            document.getElementById(views[k]).hidden = k !== v;
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

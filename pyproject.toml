@@ -1,0 +1,46 @@
+[project]
+name = "cbec-support-agent"
+version = "2.0"
+description = "跨境电商多语种智能客服 Agent 系统"
+requires-python = ">=3.12"
+
+# 依赖清单遵循实施规格第 2 节，仅补充一处规格遗漏：
+# 规格第 2 节只列了 `langgraph`，但 PostgresSaver（PG checkpointer，规格第 5 节必需）
+# 由独立包 `langgraph-checkpoint-postgres` 提供，langgraph 本体不附带。已补充。
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+    "sqlalchemy",
+    "alembic",
+    "psycopg[binary]",
+    "pgvector",
+    "pymilvus[milvus_lite]",  # 向量库：开发用 Milvus Lite，生产指向 standalone 集群
+    "redis",
+    "arq",
+    "langgraph",
+    "langgraph-checkpoint-postgres",
+    "httpx",
+    "FlagEmbedding",
+    "openai",
+    "python-json-logger",
+    "prometheus-client",
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "locust",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]

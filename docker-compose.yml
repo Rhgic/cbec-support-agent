@@ -1,0 +1,49 @@
+# 跨境电商多语种智能客服 Agent 系统 —— 编排文件
+# 单数据库：业务数据与向量同库（pgvector 扩展）
+# 仅编排，不包含任何业务代码
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cbec
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # 为什么用 healthcheck：app 依赖 PG 就绪，compose 内通过 condition 等待，避免启动竞态
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cbec"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # 容器内用服务名访问，避免硬编码 localhost
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/cbec
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+volumes:
+  pgdata:

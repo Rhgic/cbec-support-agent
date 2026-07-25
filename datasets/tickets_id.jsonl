@@ -1,0 +1,33 @@
+{"lang": "id", "text": "min pesanan saya blm sampe udh lama bgt", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "kok resi ga update update ya", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "udh 2 minggu barang blm nyampe", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "statusnya terkirim tapi barangnya ga ada", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "pengiriman ke surabaya berapa lama", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "pesanan saya udh dikirim blm sih", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "paket nyangkut di bea cukai udh seminggu", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "kapan sampe ya butuh buat hari jumat", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "kenapa lama banget pengirimannya", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "barang saya belum datang juga nih", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "mau retur sepatunya ga muat", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "gimana cara refund barangnya datang rusak", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "bisa tukar ukuran yang lebih besar ga", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "produknya cacat mau uang saya balik", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "dikirimnya salah barang harus dibalikin", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "refund berapa lama baru masuk", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "datang pecah terus gimana", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "berubah pikiran bisa batal sama retur ga", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "ongkir retur ditanggung siapa nih", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "baterai earphone cuma 3 jam normal ga sih", "gold_lang": "id", "gold_intent": "product"}
+{"lang": "id", "text": "jaket ini beneran tahan air", "gold_lang": "id", "gold_intent": "product"}
+{"lang": "id", "text": "antara m sama l pilih yang mana ya", "gold_lang": "id", "gold_intent": "product"}
+{"lang": "id", "text": "cocok ga sama iphone", "gold_lang": "id", "gold_intent": "product"}
+{"lang": "id", "text": "ngecas casenya berapa lama", "gold_lang": "id", "gold_intent": "product"}
+{"lang": "id", "text": "baterainya tahan berapa lama", "gold_lang": "id", "gold_intent": "product"}
+{"lang": "id", "text": "bisa dipake pas mandi ga", "gold_lang": "id", "gold_intent": "product"}
+{"lang": "id", "text": "makasih pengiriman cepet!", "gold_lang": "id", "gold_intent": "other"}
+{"lang": "id", "text": "pelayanan terburuk yang pernah saya alami", "gold_lang": "id", "gold_intent": "other"}
+{"lang": "id", "text": "halo?? ada orang ga", "gold_lang": "id", "gold_intent": "other"}
+{"lang": "id", "text": "cuma mau bilang produknya bagus banget", "gold_lang": "id", "gold_intent": "other"}
+{"lang": "id", "text": "kapok belanja disini", "gold_lang": "id", "gold_intent": "other"}
+{"lang": "id", "text": "ada nomor telepon ga", "gold_lang": "id", "gold_intent": "other"}
+{"lang": "id", "text": "mau ngomong sama orang asli dong", "gold_lang": "id", "gold_intent": "other"}

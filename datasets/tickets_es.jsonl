@@ -1,0 +1,33 @@
+{"lang": "es", "text": "hola donde esta mi pedido ya pague hace rato", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "no me llega el paquete y ya pasaron 2 semanas", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "el seguimiento no se actualiza hace dias", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "dice entregado pero no recibi nada", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "cuanto tarda el envio a españa", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "ya salio mi pedido o todavia no", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "mi paquete lleva una semana en aduana", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "cuando llega lo necesito para el viernes", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "por que tarda tanto el envio", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "mi compra sigue sin llegar", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "quiero devolver estos zapatos no me quedan", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "como pido el reembolso vino roto", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "puedo cambiarlo por una talla mas grande", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "el producto esta defectuoso quiero mi dinero", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "me mandaron el articulo equivocado hay que devolverlo", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "cuanto tarda en aparecer el reembolso", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "llego partido y ahora que", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "me arrepenti puedo cancelar y devolver", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "tengo que pagar yo el envio de devolucion", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "los audifonos duran como 3 horas es normal", "gold_lang": "es", "gold_intent": "product"}
+{"lang": "es", "text": "esta chaqueta es impermeable de verdad", "gold_lang": "es", "gold_intent": "product"}
+{"lang": "es", "text": "estoy entre m y l cual elijo", "gold_lang": "es", "gold_intent": "product"}
+{"lang": "es", "text": "funciona con iphone", "gold_lang": "es", "gold_intent": "product"}
+{"lang": "es", "text": "cuanto tarda en cargar la cajita", "gold_lang": "es", "gold_intent": "product"}
+{"lang": "es", "text": "cuanta bateria tienen estos", "gold_lang": "es", "gold_intent": "product"}
+{"lang": "es", "text": "los puedo usar en la ducha", "gold_lang": "es", "gold_intent": "product"}
+{"lang": "es", "text": "gracias por el envio rapido!", "gold_lang": "es", "gold_intent": "other"}
+{"lang": "es", "text": "es el peor servicio que he visto la verdad", "gold_lang": "es", "gold_intent": "other"}
+{"lang": "es", "text": "hola?? hay alguien ahi", "gold_lang": "es", "gold_intent": "other"}
+{"lang": "es", "text": "solo queria decir que el producto es excelente", "gold_lang": "es", "gold_intent": "other"}
+{"lang": "es", "text": "no vuelvo a comprar aqui", "gold_lang": "es", "gold_intent": "other"}
+{"lang": "es", "text": "tienen un numero de telefono", "gold_lang": "es", "gold_intent": "other"}
+{"lang": "es", "text": "quiero hablar con una persona real", "gold_lang": "es", "gold_intent": "other"}

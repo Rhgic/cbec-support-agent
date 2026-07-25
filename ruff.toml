@@ -1,0 +1,11 @@
+# ruff 配置：行宽与实施规格风格保持一致
+# 120 而非 100：Alembic 迁移里带 server_default 的列定义天然较长，强行换行反而降低可读性
+line-length = 120
+target-version = "py312"
+
+[lint]
+# E/F 为基础错误；I 为 import 排序；W 为警告；UP 为现代语法；B 为常见 bug 模式
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = [
+    "B008",  # FastAPI 在参数默认值里写 Depends(...) 属正常用法
+]

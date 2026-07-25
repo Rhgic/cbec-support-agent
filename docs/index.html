@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>跨境电商多语种智能客服 Agent 系统 — 项目主页</title>
+<style>
+  :root{
+    --paper:#faf8f3; --panel:#ffffff; --ink:#16202a; --muted:#5c6b7a; --faint:#8a99a8;
+    --line:#e7e1d6; --line-2:#efeae0;
+    --accent:#0f7a6b; --accent-soft:#0f7a6b14;
+    --ok:#1f9d6b; --warn:#c98a12; --stop:#d1483f;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,"PingFang SC","Microsoft YaHei",sans-serif;
+    --r:12px; --maxw:960px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0e141c; --panel:#151e28; --ink:#e8eef5; --muted:#93a3b4; --faint:#61728a;
+      --line:#243040; --line-2:#1d2732; --accent:#3fc9b0; --accent-soft:#3fc9b01a;
+      --ok:#39d39b; --warn:#e6b13c; --stop:#f0655c;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  section{padding:46px 0;border-top:1px solid var(--line-2)}
+  h2.sec{font-size:13px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 22px;font-weight:600}
+
+  /* ---------- hero ---------- */
+  .hero{padding:64px 0 40px;border-top:0}
+  .hero .badge-line{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+  .tag-work{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:3px 11px}
+  .hero h1{font-size:clamp(26px,4.4vw,40px);line-height:1.18;margin:0 0 14px;letter-spacing:-.01em;font-weight:750}
+  .hero p.lead{font-size:clamp(16px,2.2vw,19px);color:var(--muted);margin:0 0 26px;max-width:44em}
+  .stack{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+  .stack span{font-family:var(--mono);font-size:12.5px;color:var(--ink);background:var(--panel);
+    border:1px solid var(--line);border-radius:7px;padding:5px 10px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{font-size:14.5px;font-weight:600;border-radius:9px;padding:11px 20px;cursor:pointer;
+    border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;transition:.15s}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn-primary:hover{filter:brightness(1.07);text-decoration:none}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);text-decoration:none}
+
+  /* ---------- 痛点三栏 ---------- */
+  .cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .pcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  .pcard .pk{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--stop)}
+  .pcard h3{font-size:16px;margin:8px 0 6px}
+  .pcard .pain{color:var(--muted);font-size:14px;margin:0 0 12px}
+  .pcard .fix{font-size:14.5px;border-top:1px dashed var(--line);padding-top:12px}
+  .pcard .fix b{color:var(--accent)}
+
+  /* ---------- 管线 ---------- */
+  .flow{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .node{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 11px;
+    position:relative;min-height:150px;display:flex;flex-direction:column;gap:6px}
+  .node::after{content:"→";position:absolute;right:-9px;top:14px;color:var(--faint);font-size:13px}
+  .node:last-child::after{display:none}
+  .node .ndot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  .node.gate .ndot{background:var(--stop)}
+  .node .nn{font-family:var(--mono);font-size:13px;font-weight:700}
+  .node .ncn{font-size:12px;color:var(--muted);margin-top:-2px}
+  .node .nrole{font-size:12.5px;color:var(--ink);margin-top:2px}
+  .node .ndeg{font-size:11.5px;color:var(--muted);margin-top:auto;border-top:1px solid var(--line-2);padding-top:7px}
+  .node .ndeg b{color:var(--warn);font-family:var(--mono);font-size:10px;letter-spacing:.06em}
+  .flow-note{margin-top:14px;font-size:13.5px;color:var(--muted)}
+  .flow-note .mono{color:var(--ink)}
+
+  /* ---------- 设计决策 折叠 ---------- */
+  details.dec{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  details.dec>summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;gap:12px;align-items:flex-start}
+  details.dec>summary::-webkit-details-marker{display:none}
+  .dec .num{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:2px;flex:none}
+  .dec .dh{flex:1}
+  .dec .dt{font-size:15.5px;font-weight:650}
+  .dec .dc{font-size:13.5px;color:var(--muted);margin-top:3px}
+  .dec .chev{color:var(--faint);transition:.2s;flex:none;font-family:var(--mono)}
+  details[open].dec .chev{transform:rotate(90deg)}
+  .dec .body{padding:0 18px 18px 42px;font-size:14.5px;color:var(--ink)}
+  .dec .body p{margin:0 0 8px}
+  .dec .body .why{color:var(--muted)}
+
+  /* ---------- 指标 ---------- */
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .metric{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .metric .mv{font-family:var(--mono);font-size:26px;font-weight:750;letter-spacing:-.02em}
+  .metric .mv.todo{color:var(--faint)}
+  .metric .mk{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .metric .mtag{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+    padding:2px 7px;border-radius:5px;display:inline-block;margin-top:9px}
+  .mtag.done{color:var(--ok);background:var(--accent-soft);border:1px solid var(--ok)}
+  .mtag.wait{color:var(--faint);background:transparent;border:1px solid var(--line)}
+  .metrics-note{margin-top:14px;font-size:13px;color:var(--muted);border-left:2px solid var(--accent);padding-left:12px}
+
+  /* ---------- 边界 ---------- */
+  .bounds li{margin:0 0 12px;font-size:14.5px;color:var(--ink)}
+  .bounds li b{color:var(--ink)}
+  .bounds li span{color:var(--muted)}
+
+  footer{border-top:1px solid var(--line);padding:34px 0 60px;font-size:14px;color:var(--muted)}
+  footer .frow{display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+  footer .ph{color:var(--faint)}
+  footer .fine{margin-top:16px;font-size:12px;color:var(--faint)}
+
+  @media (max-width:760px){
+    .cols3{grid-template-columns:1fr}
+    .flow{grid-template-columns:repeat(2,1fr)}
+    .node::after{display:none}
+    .metrics{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- 1. HERO -->
+  <header class="hero">
+    <div class="badge-line">
+      <span class="eyebrow">Cross-border CS · Multi-Agent</span>
+      <span class="tag-work">求职作品 · 非商业运营</span>
+    </div>
+    <h1>跨境电商多语种智能客服 Agent 系统</h1>
+    <p class="lead">面向东南亚 / 欧美市场的客服工单自动化：多 Agent 协作走完
+      「脱敏 → 分类 → 检索 → 工具调用 → 生成 → 风险闸门」全链路闭环，
+      以<strong>风险护栏</strong>与<strong>成本可控</strong>为核心——能自动答的自动答，涉及钱与承诺的坚决转人工。</p>
+    <div class="stack">
+      <span>Python</span><span>FastAPI</span><span>LangGraph</span><span>BGE-m3</span>
+      <span>Milvus</span><span>Redis</span><span>arq</span><span>DeepSeek</span><span>Alembic</span>
+    </div>
+    <div class="cta">
+      <a class="btn btn-primary" href="#design">查看核心设计 ↓</a>
+      <a class="btn btn-ghost" href="#" data-ph="github">GitHub 仓库 ↗</a>
+    </div>
+  </header>
+
+  <!-- 2. 痛点与价值 -->
+  <section id="value">
+    <h2 class="sec">这个系统解决的三个真实痛点</h2>
+    <div class="cols3">
+      <div class="pcard">
+        <div class="pk">多语种</div>
+        <h3>客户多语种，知识库中文</h3>
+        <p class="pain">东南亚 / 欧美客户用英、西、印尼语提问，而政策知识库是中文。</p>
+        <div class="fix">跨语种向量检索（BGE-m3），<b>知识库只存中文，不做多语种冗余</b>。</div>
+      </div>
+      <div class="pcard">
+        <div class="pk">幻觉 = 资损</div>
+        <h3>答错政策要真赔钱</h3>
+        <p class="pain">错答退换货 / 乱承诺退款，直接赔付，还拉低平台绩效（如 Amazon ODR）导致店铺降权。</p>
+        <div class="fix">检索置信度不足即<b>短路拒答</b>，无依据不进生成——宁可拒答，不让模型编。</div>
+      </div>
+      <div class="pcard">
+        <div class="pk">成本敏感</div>
+        <h3>大规模工单，逐条调模型会被刷爆</h3>
+        <p class="pain">客服是大规模场景，每单都走 LLM，成本不可控。</p>
+        <div class="fix">规则前置的<b>两层管线</b>，高频请求零成本命中，只把候选交给模型。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 全链路 -->
+  <section id="pipeline">
+    <h2 class="sec">全链路 · 6 个 Agent 节点</h2>
+    <div class="flow">
+      <div class="node">
+        <span class="ndot"></span><div class="nn">mask</div><div class="ncn">脱敏</div>
+        <div class="nrole">结构化 PII 脱敏，LLM 全程不见原文。</div>
+        <div class="ndeg"><b>降级</b><br>脱敏失败不放行原文，转人工。</div>
+      </div>
+      <div class="node">
+        <span class="ndot"></span><div class="nn">classify</div><div class="ncn">分类</div>
+        <div class="nrole">语种识别 + 意图三分类，规则先筛。</div>
+        <div class="ndeg"><b>降级</b><br>置信度 &lt; 0.7 转人工。</div>
+      </div>
+      <div class="node">
+        <span class="ndot"></span><div class="nn">retrieve</div><div class="ncn">检索</div>
+        <div class="nrole">BGE-m3 跨语种检索中文库。</div>
+        <div class="ndeg"><b>降级</b><br>分数 &lt; 0.45 短路拒答。</div>
+      </div>
+      <div class="node">
+        <span class="ndot"></span><div class="nn">tools</div><div class="ncn">工具</div>
+        <div class="nrole">订单 / 真实物流轨迹 / 退货期。</div>
+        <div class="ndeg"><b>降级</b><br>工具失败升级 high。</div>
+      </div>
+      <div class="node">
+        <span class="ndot"></span><div class="nn">generate</div><div class="ncn">生成</div>
+        <div class="nrole">目标语种回复，带证据引用。</div>
+        <div class="ndeg"><b>降级</b><br>失败兜底模板 + 升级 high。</div>
+      </div>
+      <div class="node gate">
+        <span class="ndot"></span><div class="nn">risk_gate</div><div class="ncn">风险闸门</div>
+        <div class="nrole">规则 + LLM 双层定级，决定放行 / 转人工。</div>
+        <div class="ndeg"><b>降级</b><br>闸门异常默认拦截。</div>
+      </div>
+    </div>
+    <p class="flow-note">全链路可追溯：每一步的耗时、token、成本、成败都写入 <span class="mono">agent_runs</span>，
+      前端按 <span class="mono">/tickets/{id}/trace</span> 还原整条时间线。</p>
+  </section>
+
+  <!-- 4. 核心设计决策 -->
+  <section id="design">
+    <h2 class="sec">核心设计决策 · 面试深挖点</h2>
+
+    <details class="dec" open>
+      <summary><span class="num">01</span><div class="dh">
+        <div class="dt">知识库仅存中文，跨语种检索替代多语种冗余</div>
+        <div class="dc">业务驱动选型 + 合规硬约束，不是炫技</div></div><span class="chev">›</span></summary>
+      <div class="body">
+        <p>N 语种 × M 篇政策的冗余维护必然腐烂，任一政策变更要全语种同步。改用 BGE-m3 的跨语种对齐能力，查询与文档同模型、无需翻译。</p>
+        <p class="why">更硬的理由：客户工单含 PII，<b>不出境是合规要求（GDPR）</b>，所以 embedding 本地部署、单次检索成本为 0。</p>
+      </div>
+    </details>
+
+    <details class="dec">
+      <summary><span class="num">02</span><div class="dh">
+        <div class="dt">检索分数不足直接短路拒答</div>
+        <div class="dc">幻觉 = 资损，宁可拒答不编造</div></div><span class="chev">›</span></summary>
+      <div class="body">
+        <p>Top-1 相似度低于阈值即短路，不进生成、转人工。电商客服的幻觉是真实赔付 + 店铺绩效损失。</p>
+        <p class="why">阈值 0.45 由实测曲线标定（见指标区），不是拍脑袋。</p>
+      </div>
+    </details>
+
+    <details class="dec">
+      <summary><span class="num">03</span><div class="dh">
+        <div class="dt">风险闸门：定义「哪些坚决不自动」</div>
+        <div class="dc">高风险动作仅起草，强制人工</div></div><span class="chev">›</span></summary>
+      <div class="body">
+        <p>涉及退款 / 赔付 / 承诺 / 金额的回复，Agent 只能起草，必须人工确认才发出。别人比「能自动多少」，本项目定义「哪些绝不自动」。</p>
+        <p class="why">规则层六条确定性规则命中即 high，可审计；LLM 只在规则未命中时判 low / mid。</p>
+      </div>
+    </details>
+
+    <details class="dec">
+      <summary><span class="num">04</span><div class="dh">
+        <div class="dt">不对称降级策略</div>
+        <div class="dc">成本护栏 fail-open，风险闸门 fail-close</div></div><span class="chev">›</span></summary>
+      <div class="body">
+        <p>成本护栏（限流 / 配额 / 熔断）故障 → <b>放行并告警</b>；风险闸门故障 → <b>默认拦截转人工</b>。</p>
+        <p class="why">因为代价不对称：护栏失效只是多花钱，风控失效是不可逆的资损。「一律 fail-open 或 fail-close 都是没想清楚」。</p>
+      </div>
+    </details>
+
+    <details class="dec">
+      <summary><span class="num">05</span><div class="dh">
+        <div class="dt">规则前置的两层管线</div>
+        <div class="dc">零成本筛高频请求，控制 LLM 调用成本</div></div><span class="chev">›</span></summary>
+      <div class="body">
+        <p>分类与风险都是「规则先筛 → 命不中才调 LLM」。高频模式零成本命中，长尾才付费给模型。</p>
+        <p class="why">「规则前置省下 X% 的 LLM 调用」就是可量化的成本数字。</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- 5. 指标 -->
+  <section id="metrics">
+    <h2 class="sec">量化指标</h2>
+    <div class="metrics">
+      <div class="metric">
+        <div class="mv">0.45</div><div class="mk">检索短路阈值 · 实测曲线拐点（0.60 会误拒 45% 真实问题）</div>
+        <span class="mtag done">实测</span>
+      </div>
+      <div class="metric">
+        <div class="mv">0%</div><div class="mk">对抗集无依据回答率（阈值 0.45，24 条对抗查询）</div>
+        <span class="mtag done">实测</span>
+      </div>
+      <div class="metric">
+        <div class="mv">7.7%</div><div class="mk">拒答率 · 真实问题被误短路的比例（越低越好，78 条）</div>
+        <span class="mtag done">实测</span>
+      </div>
+      <div class="metric">
+        <div class="mv">100%</div><div class="mk">高风险规则拦截召回（eval→补词库→复测闭环，28 条风险标注）</div>
+        <span class="mtag done">实测</span>
+      </div>
+      <div class="metric">
+        <div class="mv todo">34%</div><div class="mk">规则前置省下的 LLM 调用比例（合成集，product 类目受限于语种识别，进行中）</div>
+        <span class="mtag wait">进行中</span>
+      </div>
+      <div class="metric">
+        <div class="mv todo">XX%</div><div class="mk">自动解决率（需端到端 + LLM）</div>
+        <span class="mtag wait">待打通</span>
+      </div>
+      <div class="metric">
+        <div class="mv todo">XXX</div><div class="mk">并发压测 QPS</div>
+        <span class="mtag wait">待压测</span>
+      </div>
+      <div class="metric">
+        <div class="mv todo">XXX ms</div><div class="mk">P50 延迟</div>
+        <span class="mtag wait">待压测</span>
+      </div>
+    </div>
+
+    <figure style="margin:22px 0 0;padding:16px 16px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;">
+      <figcaption style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px;font-size:12.5px;color:var(--muted);">
+        <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:16px;border-top:2px solid var(--stop);"></span>幻觉暴露（无答案却放行）</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:16px;border-top:2px dashed var(--warn);"></span>误拒率（有答案却短路）</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;color:var(--accent);">▲ 0.45 取值</span>
+      </figcaption>
+      <svg viewBox="0 0 640 340" width="100%" role="img" aria-labelledby="swT swD" style="display:block;max-width:100%;">
+        <title id="swT">检索短路阈值扫描曲线</title>
+        <desc id="swD">阈值 0.30 到 0.65。幻觉暴露率随阈值升高从 70.8% 降到 0.45 处的 0；误拒率在 0.45 后升至 0.60 的 45.5%、0.65 的 72.7%。0.45 是两者唯一同时为 0 的点。</desc>
+        <g style="stroke:var(--line-2);stroke-width:1;">
+          <line x1="44" y1="16" x2="620" y2="16"/><line x1="44" y1="88" x2="620" y2="88"/>
+          <line x1="44" y1="160" x2="620" y2="160"/><line x1="44" y1="232" x2="620" y2="232"/>
+          <line x1="44" y1="304" x2="620" y2="304"/>
+        </g>
+        <g style="fill:var(--faint);font-family:var(--mono);font-size:11px;" text-anchor="end">
+          <text x="38" y="20">80%</text><text x="38" y="92">60%</text><text x="38" y="164">40%</text>
+          <text x="38" y="236">20%</text><text x="38" y="307">0%</text>
+        </g>
+        <line x1="290.9" y1="16" x2="290.9" y2="304" style="stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 4;"/>
+        <polyline fill="none" style="stroke:var(--stop);stroke-width:2;stroke-linejoin:round;" points="44,49.1 126.3,124 208.6,259 290.9,304 373.1,304 455.4,304 537.7,304 620,304"/>
+        <polyline fill="none" style="stroke:var(--warn);stroke-width:2;stroke-linejoin:round;stroke-dasharray:6 4;" points="44,304 126.3,304 208.6,304 290.9,304 373.1,255 455.4,222.3 537.7,140.2 620,42.3"/>
+        <g style="fill:var(--stop);"><circle cx="44" cy="49.1" r="3"/><circle cx="126.3" cy="124" r="3"/><circle cx="208.6" cy="259" r="3"/></g>
+        <g style="fill:var(--warn);"><circle cx="373.1" cy="255" r="3"/><circle cx="455.4" cy="222.3" r="3"/><circle cx="537.7" cy="140.2" r="3"/><circle cx="620" cy="42.3" r="3"/></g>
+        <circle cx="290.9" cy="304" r="4.5" style="fill:var(--panel);stroke:var(--accent);stroke-width:2;"/>
+        <g style="fill:var(--faint);font-family:var(--mono);font-size:11px;" text-anchor="middle">
+          <text x="44" y="322">0.30</text><text x="126.3" y="322">0.35</text><text x="208.6" y="322">0.40</text>
+          <text x="290.9" y="322" style="fill:var(--accent);font-weight:700;">0.45</text>
+          <text x="373.1" y="322">0.50</text><text x="455.4" y="322">0.55</text>
+          <text x="537.7" y="322">0.60</text><text x="620" y="322">0.65</text>
+        </g>
+      </svg>
+      <div class="mono" style="margin-top:8px;font-size:12px;color:var(--faint);text-align:center;">阈值 0.45：两类错误同时为 0（唯一拐点）· 0.60：误拒 45.5% 真实问题</div>
+    </figure>
+
+    <p class="metrics-note">「实测」为当前数据集上跑通的真实结果：100 条多语种工单、22 条有答案查询、24 条对抗查询、
+      28 条风险标注。数据为合成（政策文本 / 物流查询真实），量级待接入真实工单后定稿。
+      「进行中 / 待打通」如实标出未完成项——<strong>不把目标值当已达成写</strong>，这本身是本项目的一部分。
+      高风险召回的 100% 来自一条可复现的评测闭环：eval 先抓到一条西语漏网（承诺词库缺 “devolveremos”），
+      补词后复测回到 13/13，且过度拦截率不变——数字背后是「评测→定位→修复→复测」，不是一句口号。</p>
+  </section>
+
+  <!-- 5b. 业务价值 -->
+  <section id="value-biz">
+    <h2 class="sec">业务价值 · 这对老板意味着什么</h2>
+    <div class="cols3">
+      <div class="pcard">
+        <div class="pk" style="color:var(--accent)">省人力</div>
+        <h3>每 +10% 自动解决率 ≈ 少 1–2 名客服</h3>
+        <p class="pain">按客服月薪 6–8k、单人产能估算，约 <b style="color:var(--ink)">8–20 万/年</b>。多语种 7×24 排班本就难招，自动化价值在旺季放大。</p>
+        <div class="fix" style="color:var(--faint);">依据：拒答率 7.7%（真实问题极少误拒）+ 规则前置 34% 免调 LLM。<b style="color:var(--warn)">估算 · 自动解决率待端到端实测</b></div>
+      </div>
+      <div class="pcard">
+        <div class="pk" style="color:var(--accent)">保权重</div>
+        <h3>护住 ODR &lt; 1%，避免 listing 被压</h3>
+        <p class="pain">AI 乱答售后 → 买家开纠纷/差评 → ODR 上升 → 平台限流甚至封 listing。旺季一次断掉主力 SKU 现金流，<b style="color:var(--ink)">损失可达几十万级</b>。</p>
+        <div class="fix" style="color:var(--faint);">依据：高风险拦截召回 100% + 对抗集无依据回答 0%。这是「避免损失」，比「节省」对老板更痛。</div>
+      </div>
+      <div class="pcard">
+        <div class="pk" style="color:var(--accent)">控成本</div>
+        <h3>大规模工单，LLM 成本可控且防刷爆</h3>
+        <p class="pain">规则前置 34% 免调 LLM + 结果缓存 + 全局熔断，防止大促当天被刷穿；退款/赔付绝不自动，堵住羊毛党套 AI 退款。</p>
+        <div class="fix" style="color:var(--faint);">依据：单均成本按 DeepSeek 公开价估算。<b style="color:var(--warn)">估算 · 量级待压测</b></div>
+      </div>
+    </div>
+    <p class="metrics-note" style="margin-top:16px;">以上为按标注假设的<strong>业务价值估算，非已实现收益</strong>——用于说明这套系统对生意意味着什么。
+      真实数字需接入真实工单与规模后测算。把技术指标翻译成「省人力 / 保权重 / 控成本」，是这份作品面向业务的一层。</p>
+  </section>
+
+  <!-- 6. 边界与短板 -->
+  <section id="bounds">
+    <h2 class="sec">项目边界与已知短板</h2>
+    <ul class="bounds" style="list-style:none;padding:0;margin:0">
+      <li><b>PII 脱敏仅覆盖结构化字段</b>（邮箱 / 电话 / 单号）。<span>小语种人名、地址正则召回有限，需 NER 模型，当前范围未做——明确记为短板，不声称已覆盖。</span></li>
+      <li><b>订单数据为 mock</b>。<span>但运单号真实、物流查询真实、知识库与政策文本为真实来源——只有身份与订单虚构。</span></li>
+      <li><b>检索阈值基于种子数据集标定</b>（0.45）。<span>方法与曲线可复现，扩充数据集后需重跑 sweep 复核再定稿。</span></li>
+    </ul>
+  </section>
+
+  <!-- 7. 页脚 -->
+  <footer>
+    <div class="frow">
+      <span>👤 <b class="ph" data-ph="name">你的名字</b></span>
+      <span>✉ <a href="#" class="ph" data-ph="email">你的邮箱</a></span>
+      <span>⌥ <a href="#" class="ph" data-ph="github">GitHub 仓库</a></span>
+      <span>📄 <a href="#" class="ph" data-ph="resume">简历下载</a></span>
+    </div>
+    <div class="fine">跨境电商多语种智能客服 Agent 系统 · 求职作品项目 · 内容为真实工程记录，指标区严格区分已实测与待测。</div>
+  </footer>
+
+</div>
+</body>
+</html>

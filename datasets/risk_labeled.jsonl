@@ -1,0 +1,34 @@
+{"lang": "en", "draft_reply": "We'll issue a $45 refund to your original card right away.", "intent": "return", "intent_confidence": 0.92, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "We guarantee your package will arrive by tomorrow, no exceptions.", "intent": "logistics", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "We'll definitely resend a replacement for free right now.", "intent": "return", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "Thanks so much for reaching out to us!", "intent": "other", "intent_confidence": 0.95, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "Here is what I found for you.", "intent": "product", "intent_confidence": 0.55, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "Based on our policy, here is the answer to your question.", "intent": "return", "intent_confidence": 0.88, "short_circuited": true, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "Let me pull up your order status now.", "intent": "logistics", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": ["tracking api timeout"], "gold_risk": "high"}
+{"lang": "es", "draft_reply": "Le garantizamos el reembolso completo hoy mismo.", "intent": "return", "intent_confidence": 0.91, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "es", "draft_reply": "Le devolveremos 30 EUR a su tarjeta.", "intent": "return", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "es", "draft_reply": "Hola, gracias por escribirnos.", "intent": "other", "intent_confidence": 0.95, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "id", "draft_reply": "Kami jamin barang akan sampai besok pasti.", "intent": "logistics", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "id", "draft_reply": "Kami akan refund Rp150000 ke akun Anda.", "intent": "return", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "id", "draft_reply": "Ini yang saya temukan untuk Anda.", "intent": "product", "intent_confidence": 0.50, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "Your package is in transit and should arrive within about 3 days.", "intent": "logistics", "intent_confidence": 0.93, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "en", "draft_reply": "Our return window is 30 days from the delivery date.", "intent": "return", "intent_confidence": 0.92, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "en", "draft_reply": "The earbuds last about 8 to 10 hours on a single charge.", "intent": "product", "intent_confidence": 0.91, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "en", "draft_reply": "Standard cross-border delivery usually takes 7 to 15 business days.", "intent": "logistics", "intent_confidence": 0.92, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "es", "draft_reply": "Su pedido esta en transito y llegara en unos dias.", "intent": "logistics", "intent_confidence": 0.92, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "es", "draft_reply": "La ventana de devolucion es de 30 dias desde la entrega.", "intent": "return", "intent_confidence": 0.91, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "es", "draft_reply": "El producto pesa aproximadamente 200 gramos.", "intent": "product", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "id", "draft_reply": "Baterai bertahan sekitar 8 sampai 10 jam per pengisian.", "intent": "product", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "id", "draft_reply": "Pesanan Anda sedang dalam pengiriman dan segera tiba.", "intent": "logistics", "intent_confidence": 0.91, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "en", "draft_reply": "You may be eligible for a replacement; let me confirm the details first.", "intent": "return", "intent_confidence": 0.85, "short_circuited": false, "tool_errors": [], "gold_risk": "mid"}
+{"lang": "es", "draft_reply": "Es posible que aplique un cambio, dejeme verificar los detalles.", "intent": "return", "intent_confidence": 0.84, "short_circuited": false, "tool_errors": [], "gold_risk": "mid"}
+{"lang": "id", "draft_reply": "Mungkin bisa ditukar, saya cek dulu ya detailnya.", "intent": "return", "intent_confidence": 0.83, "short_circuited": false, "tool_errors": [], "gold_risk": "mid"}
+{"lang": "en", "draft_reply": "The item is priced at $19.99 and is currently in stock.", "intent": "product", "intent_confidence": 0.91, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "es", "draft_reply": "El producto cuesta 25 EUR y esta disponible.", "intent": "product", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "id", "draft_reply": "Harganya Rp99000 dan stoknya tersedia.", "intent": "product", "intent_confidence": 0.90, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "en", "draft_reply": "You'll get 50 dollars back once we receive the item.", "intent": "return", "intent_confidence": 0.9, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "We have sent 30 USD to your original card.", "intent": "return", "intent_confidence": 0.9, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "Please note we do not guarantee a specific arrival date.", "intent": "logistics", "intent_confidence": 0.9, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "es", "draft_reply": "No garantizamos una fecha exacta de entrega.", "intent": "logistics", "intent_confidence": 0.9, "short_circuited": false, "tool_errors": [], "gold_risk": "low"}
+{"lang": "en", "draft_reply": "Please share the verification code we texted you so we can proceed.", "intent": "return", "intent_confidence": 0.9, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}
+{"lang": "en", "draft_reply": "You'll need to change the payment card on file before we continue.", "intent": "return", "intent_confidence": 0.9, "short_circuited": false, "tool_errors": [], "gold_risk": "high"}

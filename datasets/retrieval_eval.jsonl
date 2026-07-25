@@ -1,0 +1,22 @@
+{"lang": "en", "query": "how long does cross border shipping take", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "es", "query": "cuanto tarda el envio internacional", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "id", "query": "pengiriman lintas negara berapa lama", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "en", "query": "who pays the import tax on my parcel", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "es", "query": "quien paga los impuestos de aduana", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "id", "query": "pajak impor siapa yang bayar", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "en", "query": "my tracking stopped updating for days", "category": "logistics", "expected_source": "file://logistics_faq.md"}
+{"lang": "es", "query": "dice entregado pero no llego el paquete", "category": "logistics", "expected_source": "file://logistics_faq.md"}
+{"lang": "en", "query": "how long until my refund arrives", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "es", "query": "cuanto tarda en llegar el reembolso", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "id", "query": "refund masuk berapa lama", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "en", "query": "my package arrived damaged what do i do", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "es", "query": "mi paquete llego roto que hago", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "id", "query": "barang datang rusak gimana", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "en", "query": "how many days do i have to return an item", "category": "return", "expected_source": "file://return_policy.md"}
+{"lang": "en", "query": "how long does the battery last", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "es", "query": "cuanto dura la bateria de los audifonos", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "id", "query": "baterai earphone tahan berapa lama", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "en", "query": "is this product waterproof", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "es", "query": "es resistente al agua", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "id", "query": "apakah ini tahan air", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "en", "query": "what size should i pick between m and l", "category": "product", "expected_source": "file://waterproof_sizing.md"}
