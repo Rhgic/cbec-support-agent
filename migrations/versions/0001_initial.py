@@ -4,8 +4,8 @@ Revision ID: 0001_initial
 Revises:
 Create Date: 2026-07-23
 
-为什么手写迁移而非自动生成：首版要把 pgvector 扩展、vector(1024) 列、HNSW 索引、
-category btree 索引一次性建对，自动生成容易漏掉扩展与索引类型。
+历史首版曾用 pgvector：该迁移保留当时的 vector(1024) 列与 HNSW 索引。
+当前向量检索已迁移到 Milvus，PG 列仅作 nullable 回退路径。
 """
 
 import sqlalchemy as sa
@@ -19,7 +19,7 @@ depends_on: str | None = None
 
 
 def upgrade() -> None:
-    # pgvector 扩展必须在创建 vector 列之前启用（单库：业务与向量同库）
+    # 历史回退列仍是 vector 类型，因此迁移时必须先启用 pgvector 扩展。
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
     op.create_table(
@@ -49,7 +49,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["doc_id"], ["knowledge_docs.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
-    # 先按 category 过滤再做向量排序，这是选用 pgvector 而非 Chroma/faiss 的核心理由
+    # 历史 pgvector 索引保留用于回退；当前线上查询走 Milvus HNSW + COSINE。
     op.create_index("ix_knowledge_chunks_category", "knowledge_chunks", ["category"])
     op.create_index(
         "ix_knowledge_chunks_embedding",

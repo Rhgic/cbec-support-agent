@@ -32,3 +32,23 @@
 {"lang": "en", "text": "do you guys have a phone number", "gold_lang": "en", "gold_intent": "other"}
 {"lang": "en", "text": "can i change the shipping address i just ordered", "gold_lang": "en", "gold_intent": "other"}
 {"lang": "en", "text": "need to talk to a real person", "gold_lang": "en", "gold_intent": "other"}
+{"lang": "en", "text": "Can you check where order CBEC202400000 is right now?", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "Tracking for CBEC202400001 has not changed since Monday.", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "Order CBEC202400002 says delivered, but nothing arrived.", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "When should I expect CBEC202400003 to reach me?", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "Please check whether CBEC202400004 has cleared customs.", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "I need the latest shipping status for CBEC202400005.", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "Has order CBEC202400006 left the warehouse yet?", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "The parcel for CBEC202400007 seems stuck in transit.", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "Where is CBEC202400008? I need it before the weekend.", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "Please look up the carrier update for CBEC202400009.", "gold_lang": "en", "gold_intent": "logistics"}
+{"lang": "en", "text": "I need to return the item from order CBEC202400010.", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "Order CBEC202400011 arrived damaged; what are my return options?", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "Can I exchange the product in CBEC202400001 for another size?", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "The wrong item came in CBEC202400002 and I need to send it back.", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "Please check if CBEC202400003 is still within the return window.", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "I want a refund review for the defective item in CBEC202400004.", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "How do I return the unopened item from CBEC202400005?", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "The item in CBEC202400006 stopped working; can it be replaced?", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "Please start a return assessment for CBEC202400007.", "gold_lang": "en", "gold_intent": "return"}
+{"lang": "en", "text": "CBEC202400008 arrived cracked and I need help with the return.", "gold_lang": "en", "gold_intent": "return"}

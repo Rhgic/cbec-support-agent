@@ -7,7 +7,7 @@
 ```bash
 cd "跨境客服项目根目录"
 
-# 1. 起数据库（pgvector）
+# 1. 起 PostgreSQL 业务数据库（向量库使用本地 Milvus Lite）
 docker compose up -d db
 
 # 2. 建表 + 灌知识库到 Milvus

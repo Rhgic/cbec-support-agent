@@ -30,6 +30,7 @@ os.environ.setdefault("GRPC_ENABLE_FORK_SUPPORT", "false")
 import argparse  # noqa: E402
 import json  # noqa: E402
 import time  # noqa: E402
+import uuid  # noqa: E402
 from collections import Counter, defaultdict  # noqa: E402
 from pathlib import Path  # noqa: E402
 
@@ -37,6 +38,7 @@ from app.database import SessionLocal  # noqa: E402
 from app.graph.builder import build_graph  # noqa: E402
 from app.graph.state import TicketState  # noqa: E402
 from app.models import Ticket  # noqa: E402
+from app.services.ticket_outcome import apply_ticket_result  # noqa: E402
 
 DATASETS = {
     "en": Path("datasets/tickets_en.jsonl"),
@@ -104,7 +106,7 @@ def load_rows(limit_per_group: int | None, langs: list[str]) -> list[dict]:
     return rows
 
 
-def run_one(graph, row: dict) -> dict:
+def run_one(graph, row: dict, eval_run_id: str) -> dict:
     """建真工单 → 跑整图 → 抽出评测关心的字段。
 
     走真 DB 而非造假 state：mask 节点要写 pii_vault、tools 节点要按 ticket_id 取回真实单号、
@@ -112,7 +114,11 @@ def run_one(graph, row: dict) -> dict:
     """
     db = SessionLocal()
     try:
-        ticket = Ticket(raw_text=row["text"], status="processing")
+        ticket = Ticket(
+            raw_text=row["text"],
+            status="processing",
+            eval_run_id=eval_run_id,
+        )
         db.add(ticket)
         db.commit()
         ticket_id = ticket.id
@@ -125,8 +131,17 @@ def run_one(graph, row: dict) -> dict:
         result = graph.invoke(state)
         err = None
     except Exception as e:  # noqa: BLE001 — 单条失败不能中断整批评测
-        result, err = {}, str(e)[:300]
+        err = str(e)[:300]
+        result = {"fatal_error": err}
     latency_ms = int((time.perf_counter() - t0) * 1000)
+
+    # 与 worker 共用同一个持久化函数，确保 metrics 与离线报告口径一致。
+    db = SessionLocal()
+    try:
+        apply_ticket_result(db, ticket_id, result)
+        db.commit()
+    finally:
+        db.close()
 
     reasons = result.get("risk_reasons") or []
     return {
@@ -273,11 +288,13 @@ def main() -> None:
         return
 
     print(f"准备评测 {len(rows)} 条工单（真调 LLM，请确认 worker 已停）…")
+    eval_run_id = str(uuid.uuid4())
+    print(f"评测批次 eval_run_id={eval_run_id}")
     graph = build_graph().compile()
 
     records = []
     for i, row in enumerate(rows, 1):
-        rec = run_one(graph, row)
+        rec = run_one(graph, row, eval_run_id)
         records.append(rec)
         flag = "✅" if rec["action"] == "auto_send" else "🔸"
         if rec["error"]:
@@ -286,6 +303,7 @@ def main() -> None:
               f"→ {str(rec['action']):<14} {rec['text'][:44]}")
 
     summary = summarize(records)
+    summary["eval_run_id"] = eval_run_id
     print_report(summary)
 
     if args.out:

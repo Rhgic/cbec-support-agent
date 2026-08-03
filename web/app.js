@@ -4,14 +4,15 @@
  * USE_MOCK 改 false 即切真实后端：createTicket → 轮询 getTicket → getTrace，渲染函数不变。
  * 文案用中文；后端真实字段值（节点名 / action / 语种码 / rule·llm）保留英文等宽。
  */
-const USE_MOCK = false;
-const API = { base: "http://127.0.0.1:8000", token: "dev-token" };
+// 静态页面默认明确使用样例模式；scripts/demo_server.py 同源伺服时会替换为 false。
+const USE_MOCK = true;
+const API = { base: window.location.origin, token: "dev-token" };
 const NODES = ["mask", "classify", "retrieve", "tools", "generate", "risk_gate"];
 const NODE_CN = { mask: "脱敏", classify: "分类", retrieve: "检索", tools: "工具", generate: "生成", risk_gate: "风险闸门" };
 const VERDICT = {
-  low:  { head: "可自动发送",     action: "auto_send",      tag: "放行" },
-  mid:  { head: "需人工快速确认", action: "quick_review",   tag: "复核" },
-  high: { head: "转人工处理",     action: "human_required", tag: "扣留" },
+  low:  { head: "已自动处理", action: "auto_send",      tag: "已自动回复" },
+  mid:  { head: "等待快速确认", action: "quick_review",   tag: "需要确认" },
+  high: { head: "等待你的审核", action: "human_required", tag: "需要审核" },
 };
 const LANG_CN = { en: "英语", es: "西语", id: "印尼语" };
 
@@ -23,6 +24,13 @@ const SAMPLES = {
       intent_confidence: 0.91, intent_method: "rule", retrieval_score: 0.78, short_circuited: false,
       draft_reply: "Your parcel (SF1234567890) cleared the transit hub and is at the customs step. Cross-border delivery usually lands in 7–15 business days; you're on day 6, so it's on track. If tracking stalls past 5 days we'll open a carrier trace for you.",
       citations: ["file://logistics_faq.md"], risk_level: "low", action: "auto_send",
+      customer_message: "Hi, where is my order? Tracking number is SF1234567890, it's been almost a week.",
+      customer_translation_zh: "你好，我的订单到哪里了？运单号是 SF1234567890，已经快一周了。",
+      draft_translation_zh: "您的包裹（SF1234567890）已通过中转中心，目前处于清关阶段。跨境配送通常需要 7–15 个工作日；您现在是第 6 天，仍在正常时效内。如果物流超过 5 天没有更新，我们会为您向承运商发起查询。",
+      tool_results: {
+        order: { order_no: "CBEC202400001", product_name: "Travel Backpack", status: "shipped", tracking_no: "SF1234567890" },
+        tracking: { events: [{ status: "Arrived at customs", time: "2026-07-22", location: "Shenzhen export hub" }] },
+      },
     },
     trace: { runs: [
       { node: "mask", latency_ms: 12, ok: true },
@@ -39,6 +47,10 @@ const SAMPLES = {
       intent_confidence: 0.88, intent_method: "llm", retrieval_score: 0.71, short_circuited: false,
       draft_reply: "Lamentamos el problema. Según nuestra política, le haremos un reembolso de $50 a su método de pago original en un plazo de 3 a 5 días hábiles una vez recibido el artículo devuelto.",
       citations: ["file://return_policy.md"], risk_level: "high", action: "human_required",
+      customer_message: "Quiero un reembolso por el artículo roto que recibí, ¿cuánto tardan?",
+      customer_translation_zh: "我收到的商品坏了，想申请退款，需要多久？",
+      draft_translation_zh: "很抱歉给您带来困扰。根据我们的政策，在收到退回的商品后，我们会在 3–5 个工作日内将 50 美元退款至您原来的付款方式。",
+      tool_results: { tools_skipped: "未提供订单号；先由人工确认退款条件与订单信息" },
     },
     trace: { runs: [
       { node: "mask", latency_ms: 14, ok: true },
@@ -54,6 +66,9 @@ const SAMPLES = {
       ticket_id: 4819, status: "awaiting_review", lang: "id", intent: "other",
       intent_confidence: 0.52, intent_method: "llm", retrieval_score: 0.19, short_circuited: true,
       draft_reply: null, citations: [], risk_level: "high", action: "human_required",
+      customer_message: "Halo, bagaimana cuaca di Jakarta besok ya?",
+      customer_translation_zh: "你好，明天雅加达天气怎么样？",
+      tool_results: { tools_skipped: "语料外问题，未调用订单或物流工具" },
     },
     trace: { runs: [
       { node: "mask", latency_ms: 11, ok: true },
@@ -70,6 +85,7 @@ const SAMPLE_TEXT = {
   oos: "Halo, bagaimana cuaca di Jakarta besok ya?",
 };
 const byId = Object.fromEntries(ORDER.map((k) => [SAMPLES[k].ticket.ticket_id, SAMPLES[k]]));
+const LIVE_TICKET_IDS = [];
 
 /* ---------------- helpers ---------------- */
 const $ = (s) => document.querySelector(s);
@@ -82,8 +98,11 @@ let selectedId = null;
 function renderList() {
   const box = $("#tickets");
   box.innerHTML = "";
-  ORDER.forEach((k) => {
-    const t = SAMPLES[k].ticket;
+  const ids = [...LIVE_TICKET_IDS, ...ORDER.map((k) => SAMPLES[k].ticket.ticket_id)];
+  ids.forEach((id) => {
+    const sample = byId[id];
+    if (!sample) return;
+    const t = sample.ticket;
     const row = document.createElement("div");
     row.className = "tk" + (t.ticket_id === selectedId ? " active" : "");
     row.tabIndex = 0;
@@ -92,14 +111,24 @@ function renderList() {
       `<div class="tk-main">` +
         `<div class="tk-top"><span class="tk-id">#${t.ticket_id}</span>` +
         `<span class="tk-meta">${t.intent} · ${t.lang}</span></div>` +
-        `<div class="tk-preview">${esc(SAMPLE_TEXT[k])}</div>` +
+        `<div class="tk-preview">${esc(t.customer_message || "当前工单未返回客户消息")}</div>` +
+        `<div class="tk-state ${t.status === "awaiting_review" ? "todo" : ""}">${t.status === "awaiting_review" ? "需要你审核" : "已处理，无需操作"}</div>` +
       `</div>` +
       `<span class="badge ${t.risk_level}">${t.risk_level}</span>`;
     row.onclick = () => selectTicket(t.ticket_id);
     row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectTicket(t.ticket_id); } };
     box.appendChild(row);
   });
-  $("#tk-count").textContent = ORDER.length + " 条";
+  $("#tk-count").textContent = ids.length + " 条";
+}
+
+function upsertTicket(sample, { select = false, realtime = false } = {}) {
+  const id = sample.ticket.ticket_id;
+  byId[id] = sample;
+  if (realtime && !LIVE_TICKET_IDS.includes(id)) LIVE_TICKET_IDS.unshift(id);
+  if (select) selectedId = id;
+  renderList();
+  if (select) renderDetail(sample);
 }
 
 function selectTicket(id) {
@@ -116,18 +145,23 @@ function renderDetail(sample) {
   const el = $("#detail");
   el.innerHTML =
     detailHead(t) +
-    channelHtml(t) +
     workHtml(t) +
     traceFoldHtml(trace);
   renderTrace(t, trace);
+  el.querySelectorAll("[data-review]").forEach((button) => {
+    button.addEventListener("click", () => submitReview(button.dataset.review, t));
+  });
+  el.querySelectorAll("[data-translate]").forEach((button) => {
+    button.addEventListener("click", () => requestTranslation(button.dataset.translate, t, button));
+  });
 }
 
 function detailHead(t) {
+  const status = t.status === "awaiting_review" ? "待处理" : "已完成";
   return `<div class="detail-head">` +
-    `<span class="d-id">#${t.ticket_id}</span>` +
-    `<span class="badge ${t.risk_level}">${t.risk_level}</span>` +
-    `<span class="d-meta">${t.intent} · ${t.intent_method} · ${t.lang}</span>` +
-    `<span class="d-status">${t.status}</span>` +
+    `<div><div class="detail-kicker">当前工单</div><span class="d-id">#${t.ticket_id}</span></div>` +
+    `<span class="badge ${t.risk_level}">${t.risk_level === "high" ? "需审核" : "已处理"}</span>` +
+    `<span class="d-status">${status}</span>` +
   `</div>`;
 }
 
@@ -135,7 +169,7 @@ function traceFoldHtml(trace) {
   const runs = (trace && trace.runs) || [];
   const total = runs.reduce((a, r) => a + (r.latency_ms || 0), 0);
   const cost = runs.reduce((a, r) => a + (r.cost_usd || 0), 0);
-  return `<details class="trace-fold"><summary>管线轨迹` +
+  return `<details class="trace-fold"><summary>查看系统运行记录` +
     `<span class="sum-num">${runs.length} 个节点 · ${total} ms · ${fmtCost(cost)}</span></summary>` +
     `<div class="trace" id="trace"></div></details>`;
 }
@@ -173,14 +207,21 @@ function channelHtml(t) {
     : lvl === "high" ? "回复涉及金额或承诺 —— 需人工确认后才能发出。"
     : lvl === "mid" ? "风险不高，但发送前值得看一眼。"
     : "事实性、有依据、无承诺 —— 可安全自动发送。";
+  const actions = t.status === "awaiting_review" && t.draft_reply
+    ? `<div class="decision-actions">` +
+        `<button class="btn btn-pass" data-review="approved">确认并发送</button>` +
+        `<button class="btn btn-ghost" data-review="edited">修改回复</button>` +
+        `<button class="text-action" data-review="rejected">退回重办</button>` +
+        `<div class="review-help">先核对退款金额与到账时效；确认无误后点击“确认并发送”。</div>` +
+      `</div>`
+    : "";
   return `<div class="channel ${lvl}">` +
     `<div class="ch-edge" aria-hidden="true"></div>` +
-    `<div class="ch-main"><div class="ch-verb">${v.tag}</div><div class="ch-why">${why}</div></div>` +
-    `<div class="ch-act"><div class="k">动作</div><div class="v">${v.action}</div></div>` +
+    `<div class="ch-main"><div class="ch-kicker">Agent 建议</div><div class="ch-verb">${v.tag}</div><div class="ch-why">${why}</div>${actions}</div>` +
   `</div>`;
 }
 
-/* 工作区：左＝要判断的东西（草稿+决策按钮），右＝判断依据 */
+/* 收件箱工作区：中间是客户会话，右侧是 Agent 助手。 */
 const THRESHOLD = 0.45;
 
 function workHtml(t) {
@@ -191,16 +232,9 @@ function workHtml(t) {
   if (t.draft_reply) {
     draft =
       `<div class="draft ${held ? "held" : ""}">` +
-        `<header><span class="label">草稿回复</span><span class="r-lang">${langName}</span></header>` +
+        `<header><span class="label">建议回复</span><span class="r-lang">${langName}</span></header>` +
         `<div class="r-body">${esc(t.draft_reply)}</div>` +
-        (t.status === "awaiting_review"
-          ? `<div class="decide">` +
-              `<button class="btn btn-pass btn-sm">通过并发送</button>` +
-              `<button class="btn btn-ghost btn-sm">修改后发送</button>` +
-              `<button class="btn btn-ghost btn-sm">退回重办</button>` +
-              `<span class="hint">本系统只起草，不实际外发</span>` +
-            `</div>`
-          : "") +
+        translationHtml("draft", t) +
       `</div>`;
   } else {
     draft =
@@ -234,7 +268,10 @@ function workHtml(t) {
   const conf = t.intent_confidence != null ? t.intent_confidence.toFixed(2) : "—";
 
   const evidence =
-    `<div class="evidence">` +
+    `<details class="evidence-fold">` +
+      `<summary>为什么这样处理？<span>查看 AI 判断依据</span></summary>` +
+      `<div class="evidence">` +
+      toolHtml(t) +
       `<div class="ev"><h4>依据来源</h4><div class="cites">${cites}</div></div>` +
       `<div class="ev"><h4>检索</h4>${gauge}</div>` +
       `<div class="ev"><h4>判定</h4>` +
@@ -243,9 +280,88 @@ function workHtml(t) {
         kv("置信度", conf) +
         kv("风险", (t.risk_level || "—").toUpperCase()) +
       `</div>` +
-    `</div>`;
+      `</div>` +
+    `</details>`;
 
-  return `<div class="work"><div>${draft}</div>${evidence}</div>`;
+  return `<div class="work"><main class="work-main">${conversationHtml(t)}${customerHtml(t)}</main>` +
+    `<aside class="agent-assist">${channelHtml(t)}${draft}${evidence}</aside></div>`;
+}
+
+function conversationHtml(t) {
+  const conversation = t.conversation;
+  if (!conversation?.user_id) return "";
+  const count = conversation.history_count || 0;
+  const recent = (conversation.recent_messages || []).slice(-2);
+  return `<section class="conversation-context">` +
+    `<header><span class="label">客户上下文</span><span class="customer-note">${esc(conversation.user_id)}</span></header>` +
+    `<div class="conversation-copy">AI 已带入此前 ${count} 条同一客户消息，避免脱离上下文回复。</div>` +
+    (recent.length ? `<div class="conversation-history">${recent.map((m) => `<div>${esc(m.message || "")}</div>`).join("")}</div>` : "") +
+  `</section>`;
+}
+
+function customerHtml(t) {
+  const message = t.customer_message || "当前工单未返回可展示的客户原话";
+  return `<section class="customer-message">` +
+    `<header><div class="customer-heading"><span class="customer-avatar">客</span><div><span class="label">客户最新消息</span><span class="customer-note">原文已脱敏</span></div></div><span class="message-time">刚刚</span></header>` +
+    `<div class="customer-body"><span class="message-sender">客户</span>${esc(message)}</div>` +
+    translationHtml("customer", t) +
+  `</section>`;
+}
+
+function translationHtml(kind, ticket) {
+  if (ticket.lang === "zh") return "";
+  return `<div class="translation">` +
+    `<button class="translate-btn" data-translate="${kind}">翻译成中文</button>` +
+    `<span class="translation-note">${USE_MOCK ? "演示译文" : "调用翻译服务"}</span>` +
+    `<div class="translation-result" data-translation-box="${kind}" hidden></div>` +
+  `</div>`;
+}
+
+async function requestTranslation(kind, ticket, button) {
+  const box = button.closest(".translation").querySelector("[data-translation-box]");
+  const source = kind === "customer" ? ticket.customer_message : ticket.draft_reply;
+  if (!source) return;
+  button.disabled = true;
+  button.textContent = "翻译中…";
+  try {
+    let translation;
+    if (USE_MOCK) {
+      translation = ticket[`${kind}_translation_zh`];
+      if (!translation) throw new Error("当前样例未提供译文");
+    } else {
+      const r = await fetch(`${API.base}/translate`, {
+        method: "POST", headers: authh(), body: JSON.stringify({ text: source, target_lang: "zh" }),
+      });
+      if (!r.ok) throw new Error("翻译服务暂不可用");
+      ({ translation } = await r.json());
+    }
+    box.textContent = translation;
+    box.hidden = false;
+    button.textContent = "已显示中文译文";
+  } catch (e) {
+    button.disabled = false;
+    button.textContent = "重新翻译";
+    showToast(`翻译失败：${e.message || e}`, "error");
+  }
+}
+
+function toolHtml(t) {
+  const result = t.tool_results || {};
+  const order = result.order;
+  const tracking = result.tracking;
+  if (order) {
+    const latest = tracking?.events?.[0];
+    return `<div class="ev tool-result"><h4>业务工具结果</h4>` +
+      `<div class="tool-kv"><span>订单</span><b>${esc(order.order_no || "—")}</b></div>` +
+      `<div class="tool-kv"><span>商品</span><b>${esc(order.product_name || "—")}</b></div>` +
+      `<div class="tool-kv"><span>状态</span><b>${esc(order.status || "—")}</b></div>` +
+      (order.tracking_no ? `<div class="tool-kv"><span>运单</span><b>${esc(order.tracking_no)}</b></div>` : "") +
+      (latest ? `<div class="tool-event"><b>最新轨迹</b><span>${esc(latest.status || "—")} · ${esc(latest.location || "—")}</span></div>` : "") +
+    `</div>`;
+  }
+  return `<div class="ev tool-result"><h4>业务工具结果</h4>` +
+    `<div class="tool-empty">${esc(result.tools_skipped || "本工单未命中可展示的工具结果")}</div>` +
+  `</div>`;
 }
 
 /* ---------------- 运行 ---------------- */
@@ -263,16 +379,16 @@ async function run() {
   try {
     let sample;
     if (USE_MOCK) {
-      sample = SAMPLES[pickScenario(text)];
+      sample = structuredClone(SAMPLES[pickScenario(text)]);
+      sample.ticket.customer_message = text;
       await new Promise((r) => setTimeout(r, 240));
     } else {
       const created = await createTicket(text);
       const ticket = await pollTicket(created.ticket_id);
       sample = { ticket, trace: await getTrace(created.ticket_id) };
-      byId[ticket.ticket_id] = sample;
     }
+    upsertTicket(sample, { select: true, realtime: !USE_MOCK });
     $("#detected").textContent = sample.ticket.lang || "—";
-    selectTicket(sample.ticket.ticket_id);
   } catch (e) {
     $("#detail").innerHTML = `<div class="empty"><div class="big">请求失败</div><div>${esc(String(e.message || e))}</div></div>`;
   } finally {
@@ -306,6 +422,86 @@ async function pollTicket(id, tries = 40) {
   throw new Error("等待处理超时");
 }
 
+async function submitReview(action, ticket) {
+  let finalReply = null;
+  if (action === "edited") {
+    finalReply = window.prompt("修改草稿后发送（仅演示，不会外发）：", ticket.draft_reply || "");
+    if (finalReply === null) return;
+  }
+  try {
+    let updated;
+    if (USE_MOCK) {
+      updated = structuredClone(ticket);
+      updated.status = action === "rejected" ? "failed" : "closed";
+      if (finalReply) updated.draft_reply = finalReply;
+    } else {
+      const r = await fetch(`${API.base}/review/${ticket.ticket_id}`, {
+        method: "POST", headers: authh(), body: JSON.stringify({ action, final_reply: finalReply }),
+      });
+      if (!r.ok) throw new Error(`POST /review/${ticket.ticket_id} → ${r.status}`);
+      updated = await getTicket(ticket.ticket_id);
+    }
+    updated.review_note = action === "rejected" ? "已退回重办（演示）" : "已通过，等待外发（演示）";
+    byId[updated.ticket_id] = { ticket: updated, trace: byId[updated.ticket_id]?.trace || { runs: [] } };
+    selectedId = updated.ticket_id;
+    renderList();
+    renderDetail(byId[updated.ticket_id]);
+    showToast(action === "rejected" ? "工单已退回重办；未向客户外发消息" : "审核状态已更新；未向客户外发消息", action === "rejected" ? "warn" : "success");
+  } catch (e) {
+    showToast(`审核操作失败：${e.message || e}`, "error");
+  }
+}
+
+function showToast(message, kind = "success") {
+  let toast = $("#toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.setAttribute("role", "status");
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.className = `toast ${kind} show`;
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 3500);
+}
+
+function setFeed(state, label) {
+  $("#feed-dot").className = `dot ${state}`;
+  $("#feed-label").textContent = label;
+}
+
+async function initFeed() {
+  if (USE_MOCK) {
+    setFeed("sample", "样例模式");
+    return;
+  }
+  try {
+    const r = await fetch(`${API.base}/health`, { cache: "no-store" });
+    if (!r.ok) throw new Error("health check failed");
+    initRealtime();
+  } catch (_) {
+    setFeed("down", "后端不可用");
+  }
+}
+
+function initRealtime() {
+  if (USE_MOCK || !window.EventSource) return;
+  const stream = new EventSource(`${API.base}/events?token=${encodeURIComponent(API.token)}`);
+  stream.addEventListener("open", () => setFeed("live", "实时会话已连接"));
+  stream.addEventListener("agent_suggestion", (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      if (!payload.ticket || !payload.trace) return;
+      upsertTicket({ ticket: payload.ticket, trace: payload.trace }, { select: true, realtime: true });
+      showToast(`收到 ${payload.user_id} 的新消息，Agent 已给出建议`, "success");
+    } catch (_) {
+      showToast("实时消息解析失败", "error");
+    }
+  });
+  stream.addEventListener("error", () => setFeed("down", "实时通道重连中"));
+}
+
 /* ---------------- 事件绑定 ---------------- */
 $("#samples").addEventListener("click", (e) => {
   const chip = e.target.closest(".chip");
@@ -318,8 +514,7 @@ $("#run").addEventListener("click", run);
 $("#ticket-input").addEventListener("keydown", (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") run();
 });
-if (!USE_MOCK) { $("#feed-dot").className = "dot live"; $("#feed-label").textContent = "实时后端"; }
-
 /* ---------------- 初始 ---------------- */
 renderList();
-selectTicket(SAMPLES.refund.ticket.ticket_id); // 默认展示 HELD 场景，最能体现护栏
+selectTicket(SAMPLES.refund.ticket.ticket_id); // 首屏明确展示唯一需要人工处理的工单
+initFeed();

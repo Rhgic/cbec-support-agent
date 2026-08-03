@@ -31,3 +31,23 @@
 {"lang": "id", "text": "kapok belanja disini", "gold_lang": "id", "gold_intent": "other"}
 {"lang": "id", "text": "ada nomor telepon ga", "gold_lang": "id", "gold_intent": "other"}
 {"lang": "id", "text": "mau ngomong sama orang asli dong", "gold_lang": "id", "gold_intent": "other"}
+{"lang": "id", "text": "Tolong cek pesanan CBEC202400000 sekarang ada di mana.", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "Pelacakan CBEC202400001 tidak berubah sejak hari Senin.", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "CBEC202400002 tertulis sudah diterima, tapi barang belum ada.", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "Kapan pesanan CBEC202400003 diperkirakan sampai?", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "Tolong cek apakah CBEC202400004 sudah lolos bea cukai.", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "Saya butuh status pengiriman terbaru untuk CBEC202400005.", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "Apakah pesanan CBEC202400006 sudah keluar dari gudang?", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "Paket CBEC202400007 sepertinya tertahan dalam perjalanan.", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "CBEC202400008 ada di mana? Saya perlu sebelum akhir pekan.", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "Tolong lihat pembaruan kurir terakhir untuk CBEC202400009.", "gold_lang": "id", "gold_intent": "logistics"}
+{"lang": "id", "text": "Saya perlu retur barang dari pesanan CBEC202400010.", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "CBEC202400011 datang rusak; apa pilihan retur saya?", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "Bisakah produk CBEC202400001 ditukar dengan ukuran lain?", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "Barang di CBEC202400002 salah dan ingin saya kembalikan.", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "Tolong cek apakah CBEC202400003 masih dalam batas waktu retur.", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "Saya minta peninjauan refund untuk barang cacat CBEC202400004.", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "Bagaimana cara retur barang belum dibuka dari CBEC202400005?", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "Produk CBEC202400006 tidak berfungsi; apakah bisa diganti?", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "Tolong mulai penilaian retur untuk CBEC202400007.", "gold_lang": "id", "gold_intent": "return"}
+{"lang": "id", "text": "CBEC202400008 datang retak dan saya perlu bantuan retur.", "gold_lang": "id", "gold_intent": "return"}

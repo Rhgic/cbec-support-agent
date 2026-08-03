@@ -5,7 +5,7 @@
 generate_prompt / chat_json 均 mock。
 """
 from app.graph.nodes import generate
-from app.services.llm import LlmResult
+from app.services.llm import LlmResult, generate_prompt
 
 
 def _patch_llm(monkeypatch, result: LlmResult):
@@ -39,7 +39,13 @@ def test_normal_path_returns_reply_and_citations(monkeypatch):
     _patch_llm(
         monkeypatch,
         LlmResult(
-            data={"reply": "Su pedido llegará pronto", "citations": ["https://help.example/1"]},
+            data={
+                "reply": "Su pedido llegará pronto",
+                "citations": ["https://help.example/1"],
+                "support": [
+                    {"source_url": "https://help.example/1", "quote": "delivery is on track"}
+                ],
+            },
             token_in=1,
             token_out=1,
             cost_usd=0.0,
@@ -48,7 +54,12 @@ def test_normal_path_returns_reply_and_citations(monkeypatch):
     # chunk 必须带 source_url（真实检索返回一定有）——P2 引用真实性校验要求
     # citations ⊆ 本次检索来源集合，否则视为编造
     out = generate.generate(
-        {"lang": "es", "chunks": [{"content": "evidence", "source_url": "https://help.example/1"}]}
+        {
+            "lang": "es",
+            "chunks": [
+                {"content": "Current evidence: delivery is on track", "source_url": "https://help.example/1"}
+            ],
+        }
     )
     assert out["draft_reply"] == "Su pedido llegará pronto"
     assert out["citations"] == ["https://help.example/1"]
@@ -74,7 +85,110 @@ def test_fabricated_citation_forced_high(monkeypatch):
     assert "编造" in out["risk_reasons"][0]
 
 
+def test_valid_support_recovers_missing_citation(monkeypatch):
+    _patch_llm(
+        monkeypatch,
+        LlmResult(
+            data={
+                "reply": "Delivery normally takes 7 days.",
+                "citations": [],
+                "support": [
+                    {"source_url": "file://shipping.md", "quote": "Delivery normally takes 7 days"}
+                ],
+            },
+            token_in=1,
+            token_out=1,
+            cost_usd=0.0,
+        ),
+    )
+    out = generate.generate(
+        {
+            "lang": "en",
+            "chunks": [
+                {
+                    "content": "Delivery normally takes 7 days for this route.",
+                    "source_url": "file://shipping.md",
+                }
+            ],
+        }
+    )
+    assert out["citations"] == ["file://shipping.md"]
+    assert "risk_level" not in out
+
+
+def test_citation_without_verbatim_support_forced_high(monkeypatch):
+    _patch_llm(
+        monkeypatch,
+        LlmResult(
+            data={
+                "reply": "Delivery is fast.",
+                "citations": ["file://shipping.md"],
+                "support": [
+                    {"source_url": "file://shipping.md", "quote": "a sentence not in the source"}
+                ],
+            },
+            token_in=1,
+            token_out=1,
+            cost_usd=0.0,
+        ),
+    )
+    out = generate.generate(
+        {
+            "lang": "en",
+            "chunks": [{"content": "Real shipping policy.", "source_url": "file://shipping.md"}],
+        }
+    )
+    assert out["risk_level"] == "high"
+    assert "可核验" in out["risk_reasons"][0]
+
+
+def test_number_not_present_in_evidence_forced_high(monkeypatch):
+    _patch_llm(
+        monkeypatch,
+        LlmResult(
+            data={
+                "reply": "Your refund will arrive in 9 days.",
+                "citations": ["file://refund.md"],
+                "support": [
+                    {"source_url": "file://refund.md", "quote": "Refunds return to the original method"}
+                ],
+            },
+            token_in=1,
+            token_out=1,
+            cost_usd=0.0,
+        ),
+    )
+    out = generate.generate(
+        {
+            "lang": "en",
+            "chunks": [
+                {
+                    "content": "Refunds return to the original method.",
+                    "source_url": "file://refund.md",
+                }
+            ],
+        }
+    )
+    assert out["risk_level"] == "high"
+    assert "数字事实" in out["risk_reasons"][0]
+
+
 def test_unknown_lang_falls_back_to_en(monkeypatch):
     _patch_llm(monkeypatch, LlmResult(data={}, token_in=0, token_out=0, cost_usd=0.0, error="x"))
     out = generate.generate({"lang": "xx", "chunks": []})
     assert out["draft_reply"] == generate.FALLBACK["en"]
+
+
+def test_prompt_includes_masked_conversation_context():
+    prompt = generate_prompt(
+        "Where is my order?",
+        "[source: file://faq.md]\nshipping answer",
+        "",
+        "en",
+        "客户此前消息：[ORDER_1] 的物流三天未更新",
+    )
+    assert "Recent masked conversation history" in prompt["user"]
+    assert "[ORDER_1]" in prompt["user"]
+    assert "Current customer message" in prompt["user"]
+    assert '"support"' in prompt["system"]
+    assert "copied verbatim" in prompt["system"]

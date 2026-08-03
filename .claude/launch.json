@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cbec-demo",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["scripts.demo_server:app", "--host", "127.0.0.1", "--port", "8100"],
+      "port": 8100
+    }
+  ]
+}

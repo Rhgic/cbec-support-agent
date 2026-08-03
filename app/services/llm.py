@@ -65,8 +65,8 @@ def chat_json(system_prompt: str, user_prompt: str, max_retries: int = 1) -> Llm
 # 三个 prompt 均为 json_mode（response_format={"type":"json_object"}）。
 # json_mode 要求 system 或 user prompt 中必须出现 "json" 字样，且输出必须
 # 是单个合法 JSON 对象（非数组）——这是 DeepSeek/OpenAI json_mode 的坑。
-# 少样本示例未在每个 prompt 中内嵌，因为 json_mode 会强制 JSON 格式；
-# 分类/风险的任务语义足够简单，零样本即可稳定输出。
+# 分类 prompt 使用紧凑少样本处理规则层最容易混淆的边界；生成/风险仍依赖
+# 明确约束与确定性后置校验，避免无效堆叠 prompt token。
 
 
 def classify_prompt(text: str) -> dict:
@@ -76,10 +76,8 @@ def classify_prompt(text: str) -> dict:
     语种仅限 en/es/id；意图仅限 logistics/return/product/other。
     confidence 为 0~1 的浮点数，表示模型对该分类的置信度。
 
-    面试要点：
-    - 少样本（few-shot）是否内嵌在 prompt 中？当前为零样本，依赖 json_mode
-      的格式约束和清晰的任务描述；若实际准确率不足，再补充 2~3 个示例。
-    - 为什么语种和意图一次调用完成？省一次 LLM 调用 = 省一半 token 成本。
+    面试要点：语种和意图一次调用完成，省一次模型调用；少样本只覆盖容易混淆的
+    退换货/产品、致谢/物流等边界，不把整个数据集塞进 prompt。
     """
     return {
         "system": (
@@ -96,13 +94,32 @@ def classify_prompt(text: str) -> dict:
             '- "other" = anything else (greetings, complaints without clear topic, etc.)\n'
             "- Confidence: use 0.9+ for clear intent, 0.7-0.89 for ambiguous, "
             "below 0.7 for very unclear.\n"
+            "Examples (message => JSON):\n"
+            'EN: "Can I exchange this for a larger size?" => '
+            '{"lang":"en","intent":"return","confidence":0.96}\n'
+            'EN: "Thanks for the fast delivery." => '
+            '{"lang":"en","intent":"other","confidence":0.94}\n'
+            'ES: "¿Puedo cambiarlo por una talla más grande?" => '
+            '{"lang":"es","intent":"return","confidence":0.96}\n'
+            'ES: "Gracias por el envío rápido." => '
+            '{"lang":"es","intent":"other","confidence":0.94}\n'
+            'ID: "Bisa ditukar dengan ukuran lain?" => '
+            '{"lang":"id","intent":"return","confidence":0.96}\n'
+            'ID: "Makasih pengirimannya cepat." => '
+            '{"lang":"id","intent":"other","confidence":0.94}\n'
             "Output only the JSON object, no explanation."
         ),
         "user": f"Customer message:\n{text}",
     }
 
 
-def generate_prompt(customer_text: str, retrieved: str, tool_info: str, lang: str) -> dict:
+def generate_prompt(
+    customer_text: str,
+    retrieved: str,
+    tool_info: str,
+    lang: str,
+    conversation_context: str = "",
+) -> dict:
     """构造多语种回复生成 prompt，要求携带 source_url 引用、占位符保持不变。
 
     输入：
@@ -110,11 +127,13 @@ def generate_prompt(customer_text: str, retrieved: str, tool_info: str, lang: st
     - retrieved: 从知识库检索到的相关片段（中文，多个以 '\\n---\\n' 分隔）
     - tool_info: 工具调用结果文本（如订单状态、物流轨迹、退货政策评估）
     - lang: 目标输出语种（en/es/id）
+    - conversation_context: 已脱敏的近期历史，仅用于理解重复追问和上下文
 
     ⚠️ customer_text 曾被遗漏（只传知识库与工具结果），导致模型不知道客户问了什么，
     只会回「请描述你的问题」这类空话且不给引用——真跑通 LLM 后才暴露的 bug。
 
-    输出要求模型返回 {"reply": "...", "citations": ["url1", ...]}。
+    输出要求模型返回 {"reply", "citations", "support"}。support 必须复制证据原文，
+    供生成节点做确定性核验，不能只相信模型自称“有依据”。
     reply 中的 PII 占位符（[EMAIL_x] / [PHONE_x] 等）必须原样保留，
     不做替换——真实值在出站前由 restore() 统一还原。
 
@@ -143,15 +162,23 @@ def generate_prompt(customer_text: str, retrieved: str, tool_info: str, lang: st
             'Output a single JSON object with exactly these fields:\n'
             '- "reply": the full reply text in the target language\n'
             '- "citations": list of source URLs from the knowledge base (empty if none)\n\n'
+            '- "support": a list of evidence objects. Each object has "source_url" and "quote". '
+            'The quote MUST be copied verbatim from the matching knowledge-base chunk. '
+            'For tool evidence use source_url "tool://results" and copy the exact tool-result text.\n\n'
             "CRITICAL RULES:\n"
             "- Placeholder tokens like [EMAIL_1], [PHONE_2], [CARD_1], [TRACKING_1], "
             "[ORDER_1], [IP_1] MUST be kept exactly as-is in the reply. Never replace or remove them.\n"
             "- Always mention the tracking number, order status, or return policy "
             "if present in the tool results.\n"
             "- Keep replies concise and helpful. Do not fabricate details.\n"
+            "- Every important factual claim must have a support item. If you use a knowledge-base "
+            "source, include the same source_url in citations. Never invent or paraphrase support quotes.\n"
+            "- Conversation history is context only. The current customer message and current "
+            "tool results take precedence if there is any conflict.\n"
             "Output only the JSON object, no explanation."
         ),
-        "user": f"Customer message:\n{customer_text}\n\n{context}\n\n"
+        "user": f"Recent masked conversation history:\n{conversation_context or '(none)'}\n\n"
+                f"Current customer message:\n{customer_text}\n\n{context}\n\n"
                 "Answer the customer's message above, grounded in the knowledge base and tool results.",
     }
 

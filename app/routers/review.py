@@ -1,13 +1,13 @@
 """人工审核路由（规格 9）。
 
 GET  /review/queue：待审列表（status=awaiting_review 且有草稿）
-POST /review/{ticket_id}：{action, final_reply?, failure_tags?}
+POST /review/{ticket_id}：{action, final_reply?, failure_tags?, corrected_*?}
       approved/edited → 工单标记 closed（出站/放行）
       rejected        → 工单标记 failed
-      同时写入 reviews 表（人工修正样本收集，供离线归因；不做自动回流）
+      同时写入 reviews 表（人工修正样本收集，供离线导出；不做线上自动回流）
 
-为什么收集 failure_tags：规格 4.7 的 reviews 表是「失败模式」样本的载体，只落库供离线
-分析，不在线上回流——避免把人工修正当成训练数据自动吃回去。
+为什么收集 corrected_*：只有人工明确纠正的字段才生成 gold 标签；普通 approved 不会被
+误当成标注数据。导出后仍需人工复核，避免把一次误操作自动吃回线上。
 """
 from fastapi import APIRouter, Depends, Header, HTTPException
 
@@ -69,6 +69,9 @@ def review(ticket_id: int, payload: ReviewCreate, token: str = Depends(require_t
                 final_reply=payload.final_reply,
                 reviewer_action=payload.action,
                 failure_tags=payload.failure_tags,
+                corrected_lang=payload.corrected_lang,
+                corrected_intent=payload.corrected_intent,
+                corrected_risk_level=payload.corrected_risk_level,
             )
         )
         # approved/edited 放行；rejected 视为失败，不自动出站

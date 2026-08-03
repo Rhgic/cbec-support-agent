@@ -17,6 +17,8 @@ class TicketState(TypedDict):
     # 输入
     ticket_id: int
     raw_text: str
+    # 当前用户此前的脱敏会话摘要；仅在实时接入场景由接入层填充。
+    conversation_context: NotRequired[str]
 
     # ① 脱敏
     masked_text: NotRequired[str]

@@ -1,7 +1,7 @@
 """Milvus 向量检索：先按 category 标量过滤，再按向量排序。
 
 为什么用 Milvus（本项目技术栈选定）：专用 ANN 引擎 + 标量过滤 + HNSW 索引。
-开发用 Milvus Lite（pymilvus 内置、本地文件、免 docker）；把 MILVUS_URI 指向
+开发用 Milvus Lite（pymilvus 内置、本地文件、免 docker）；把 CBEC_MILVUS_URI 指向
 http://host:19530 即无缝切到 standalone 集群，代码不变。
 
 数据分工：chunk 的文本 / 元数据仍以 Postgres 为记录源（build_knowledge 写入），

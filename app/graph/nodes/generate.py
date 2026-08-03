@@ -8,6 +8,8 @@
 注意：生成失败会直接置 risk_level="high"；风险闸门（risk_gate）尊重上游已强制的 high，
 不再二次判定——避免「生成都失败了还放行」。
 """
+import re
+
 from app.graph.state import TicketState
 from app.services.llm import chat_json, generate_prompt
 
@@ -52,6 +54,51 @@ def _fabricated_citations(citations: list[str], chunks: list[dict]) -> list[str]
     return [u for u in (citations or []) if u not in allowed]
 
 
+def _normalized(text: str) -> str:
+    return " ".join((text or "").casefold().split())
+
+
+def _valid_support(
+    support: list[dict], chunks: list[dict], tool_info: str
+) -> list[dict]:
+    """只接受能在本次证据中逐字找到的引文，阻止模型自报“有依据”。"""
+    sources = {
+        c.get("source_url"): _normalized(c.get("content", ""))
+        for c in chunks
+        if c.get("source_url")
+    }
+    sources["tool://results"] = _normalized(tool_info)
+
+    valid: list[dict] = []
+    for item in support or []:
+        if not isinstance(item, dict):
+            continue
+        source_url = item.get("source_url")
+        quote = _normalized(item.get("quote", ""))
+        evidence = sources.get(source_url, "")
+        # 太短的词（如“退款”）不能证明整句结论，要求至少 6 个非空白字符。
+        if source_url and len(quote.replace(" ", "")) >= 6 and quote in evidence:
+            valid.append({"source_url": source_url, "quote": item.get("quote", "")})
+    return valid
+
+
+_PLACEHOLDER_RE = re.compile(r"\[[A-Z]+_\d+\]")
+_NUMBER_RE = re.compile(r"(?<![A-Za-z])\d+(?:[.,]\d+)?")
+
+
+def _unsupported_numeric_facts(reply: str, evidence: str) -> list[str]:
+    """检查回复中新出现的数字事实；占位符编号不属于业务事实。"""
+    reply_clean = _PLACEHOLDER_RE.sub("", reply or "")
+    evidence_clean = _PLACEHOLDER_RE.sub("", evidence or "")
+    evidence_numbers = {m.group(0).replace(",", ".") for m in _NUMBER_RE.finditer(evidence_clean)}
+    unsupported = {
+        m.group(0)
+        for m in _NUMBER_RE.finditer(reply_clean)
+        if m.group(0).replace(",", ".") not in evidence_numbers
+    }
+    return sorted(unsupported)
+
+
 def generate(state: TicketState) -> dict:
     lang = state.get("lang", "en")
     chunks = state.get("chunks", []) or []
@@ -66,7 +113,12 @@ def generate(state: TicketState) -> dict:
 
     # 传脱敏后的客户原话——LLM 全程不见原文（PII 只在出站前一步还原）
     customer_text = state.get("masked_text") or state.get("raw_text") or ""
-    prompt = generate_prompt(customer_text, retrieved, tool_info, lang)
+    conversation_context = state.get("conversation_context", "")
+    # 保留无会话上下文时的四参数调用，兼容既有调用方与评测替身。
+    if conversation_context:
+        prompt = generate_prompt(customer_text, retrieved, tool_info, lang, conversation_context)
+    else:
+        prompt = generate_prompt(customer_text, retrieved, tool_info, lang)
     res = chat_json(prompt["system"], prompt["user"])
 
     if res.error or not res.data.get("reply"):
@@ -80,6 +132,23 @@ def generate(state: TicketState) -> dict:
 
     reply = res.data["reply"]
     citations = res.data.get("citations", []) or []
+    support = res.data.get("support", []) or []
+
+    if not isinstance(citations, list) or not all(isinstance(u, str) for u in citations):
+        citations = []
+    if not isinstance(support, list):
+        support = []
+
+    valid_support = _valid_support(support, chunks, tool_info)
+    allowed_sources = {c.get("source_url") for c in chunks if c.get("source_url")}
+    supported_sources = {
+        item["source_url"] for item in valid_support if item["source_url"] in allowed_sources
+    }
+
+    # 模型偶尔漏填 citations，但已给出可逐字验证的来源与引文时可安全恢复，
+    # 避免把“格式漏字段”误当成“没有依据”。
+    if not citations and supported_sources:
+        citations = sorted(supported_sources)
 
     # 有检索结果却无引用 → 视为无依据，升级 high
     if not citations and chunks:
@@ -99,6 +168,28 @@ def generate(state: TicketState) -> dict:
             "citations": [u for u in citations if u not in fabricated],
             "risk_level": "high",
             "risk_reasons": [f"引用了未检索到的来源（疑似编造）：{fabricated}"],
+        }
+
+    # 引用 URL 仍不够：必须同时提供能在对应检索片段逐字找到的 support quote。
+    unsupported_citations = [u for u in citations if u not in supported_sources]
+    if chunks and unsupported_citations:
+        return {
+            "draft_reply": reply,
+            "citations": citations,
+            "risk_level": "high",
+            "risk_reasons": [f"引用缺少可核验的原文依据：{unsupported_citations}"],
+        }
+
+    numeric_facts = _unsupported_numeric_facts(
+        reply,
+        "\n".join(c.get("content", "") for c in chunks) + "\n" + tool_info,
+    )
+    if numeric_facts:
+        return {
+            "draft_reply": reply,
+            "citations": citations,
+            "risk_level": "high",
+            "risk_reasons": [f"回复出现证据中不存在的数字事实：{numeric_facts}"],
         }
 
     return {"draft_reply": reply, "citations": citations}

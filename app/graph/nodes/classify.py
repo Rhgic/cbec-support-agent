@@ -35,6 +35,38 @@ _LANG_PATTERNS = [
     )),
 ]
 
+# 借词（refund / shipping / product）会让印尼语消息被误判为英语。
+# 先用具有语法区分度的强特征判语种，再回退到上面的通用词表。
+_LANG_STRONG_PATTERNS = [
+    ("es", re.compile(
+        r"\b(?:quiero|puedo|puede|gracias|cu[aá]nto|cu[aá]ndo|cambiarlo|cambiarla|"
+        r"env[ií]o|devoluci[óo]n|reembolso|pedido|talla|m[aá]s grande)\b",
+        re.I,
+    )),
+    ("id", re.compile(
+        r"\b(?:saya|gimana|bagaimana|cara|barangnya|datang|untuk|baru|masuk|berapa|"
+        r"bisakah|ditukar|dengan|lain|minta|peninjauan|makasih|cepet)\b",
+        re.I,
+    )),
+]
+
+# 这些文本虽然含 shipping / pengiriman 等高频词，但不是物流查询。
+# 不在规则层强判，交给 LLM 处理，符合“宁可漏判、不可误判”的原则。
+_RULE_BYPASS = re.compile(
+    r"(?:\b(?:thanks?|thank you|gracias|makasih|terima kasih)\b.*"
+    r"\b(?:shipping|delivery|env[ií]o|entrega|pengiriman|kirim)\b|"
+    r"\bchange\b.*\bshipping address\b|"
+    r"\bsolo quer[ií]a decir\b.*\b(?:excelente|genial|bueno)\b)",
+    re.I,
+)
+
+# 容易被物流/产品关键词抢先命中的退换货表达，必须在通用优先级之前处理。
+_RETURN_OVERRIDES = {
+    "en": re.compile(r"\breturn shipping\b", re.I),
+    "es": re.compile(r"(?:\bcambiar(?:lo|la)?\b.*\btalla\b|\benv[ií]o de devoluci[óo]n\b)", re.I),
+    "id": re.compile(r"\b(?:ditukar|tukar)\b.*\b(?:ukuran|barang)\b", re.I),
+}
+
 # 意图关键词：按优先级 logistics → return → product → other
 _INTENTS = {
     "logistics": {
@@ -105,6 +137,7 @@ _INTENTS = {
 
 # 支持语种集合（常量，对齐 TicketState.lang 的 Literal 约束）
 _SUPPORTED_LANGS = {"en", "es", "id"}
+_SUPPORTED_INTENTS = {"logistics", "return", "product", "other"}
 
 
 def classify_by_rules(text: str) -> dict | None:
@@ -123,14 +156,21 @@ def classify_by_rules(text: str) -> dict | None:
     if not text or not text.strip():
         return None
 
-    # 语种识别（首命中）
+    if _RULE_BYPASS.search(text):
+        return None
+
+    # 语种识别：先强特征，再用通用词表首命中。
     detected_lang: str | None = None
-    for lang, pat in _LANG_PATTERNS:
+    for lang, pat in (*_LANG_STRONG_PATTERNS, *_LANG_PATTERNS):
         if pat.search(text):
             detected_lang = lang
             break
     if detected_lang is None:
         return None  # 无法识别语种 → 交 LLM
+
+    override = _RETURN_OVERRIDES[detected_lang]
+    if override.search(text):
+        return {"lang": detected_lang, "intent": "return", "confidence": 0.85}
 
     # 意图识别（首命中）
     for intent in ("logistics", "return", "product"):
@@ -169,9 +209,25 @@ def classify(state: TicketState) -> dict:
             "intent_method": "llm",
         }
     d = res.data
+    lang = d.get("lang")
+    intent = d.get("intent")
+    try:
+        confidence = float(d.get("confidence", 0.0))
+    except (TypeError, ValueError):
+        confidence = 0.0
+
+    # 模型输出属于不可信边界：非法枚举或置信度不能进入 LangGraph 状态。
+    # 失败时走 other + 低置信度，让风险闸门接管，而不是猜一个最接近的值。
+    if lang not in _SUPPORTED_LANGS or intent not in _SUPPORTED_INTENTS:
+        return {
+            "lang": "unknown",
+            "intent": "other",
+            "intent_confidence": 0.0,
+            "intent_method": "llm",
+        }
     return {
-        "lang": d.get("lang", "unknown"),
-        "intent": d.get("intent", "other"),
-        "intent_confidence": float(d.get("confidence", 0.0)),
+        "lang": lang,
+        "intent": intent,
+        "intent_confidence": max(0.0, min(1.0, confidence)),
         "intent_method": "llm",
     }

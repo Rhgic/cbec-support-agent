@@ -25,6 +25,7 @@ from app.graph.state import TicketState
 from app.metrics.events import record_ticket_outcome
 from app.models import Ticket
 from app.services.guardrails import set_cache
+from app.services.ticket_outcome import apply_ticket_result
 
 settings = get_settings()
 
@@ -64,27 +65,7 @@ async def process_ticket(ctx, ticket_id: int) -> dict:
     # 把编排结果持久化到 tickets 表
     db = SessionLocal()
     try:
-        t = db.get(Ticket, ticket_id)
-        t.masked_text = result.get("masked_text")
-        t.lang = result.get("lang")
-        t.intent = result.get("intent")
-        t.intent_confidence = result.get("intent_confidence")
-        t.intent_method = result.get("intent_method")
-        t.retrieval_score = result.get("retrieval_score")
-        t.short_circuited = result.get("short_circuited", False)
-        t.draft_reply = result.get("draft_reply")
-        t.citations = result.get("citations")
-        t.risk_level = result.get("risk_level")
-        t.action = result.get("action")
-
-        fatal = bool(result.get("fatal_error"))
-        if fatal or t.risk_level == "high" or t.action == "human_required":
-            t.status = "awaiting_review" if t.draft_reply else "failed"
-        elif t.action == "auto_send":
-            # 自动出站：仅标记 closed（规格 1.2：本系统不实际发送，只起草）
-            t.status = "closed"
-        else:
-            t.status = "awaiting_review"
+        apply_ticket_result(db, ticket_id, result)
         db.commit()
     finally:
         db.close()

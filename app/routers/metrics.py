@@ -5,7 +5,7 @@
 datasets/adversarial.jsonl 评测（见 locust / eval 说明），不在本接口内——它们依赖
 人工标注集，不是运行中聚合量。
 """
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy import func
 
 from app.config import get_settings
@@ -23,13 +23,35 @@ def require_token(authorization: str | None = Header(default=None)) -> str:
 
 
 @router.get("/metrics/summary")
-def summary(token: str = Depends(require_token)):
+def summary(
+    token: str = Depends(require_token),
+    eval_run_id: str | None = Query(default=None),
+):
     db = SessionLocal()
     try:
-        total = db.query(Ticket).count()
+        # 演示控制台默认展示最近一次评测批次，避免把历史评测和人工演示工单混成
+        # 一个无意义分母；显式传 eval_run_id 时可复核任意批次。
+        selected_run_id = eval_run_id
+        if selected_run_id is None:
+            selected_run_id = (
+                db.query(Ticket.eval_run_id)
+                .filter(Ticket.eval_run_id.is_not(None))
+                .order_by(Ticket.created_at.desc())
+                .limit(1)
+                .scalar()
+            )
+
+        tickets = db.query(Ticket)
+        runs = db.query(AgentRun).join(Ticket, AgentRun.ticket_id == Ticket.id)
+        if selected_run_id:
+            tickets = tickets.filter(Ticket.eval_run_id == selected_run_id)
+            runs = runs.filter(Ticket.eval_run_id == selected_run_id)
+
+        total = tickets.count()
         if total == 0:
             return {
                 "total": 0,
+                "eval_run_id": selected_run_id,
                 "auto_solve_rate": 0.0,
                 "reject_rate": 0.0,
                 "rule_hit_rate": 0.0,
@@ -39,16 +61,19 @@ def summary(token: str = Depends(require_token)):
                 "by_intent": {},
             }
 
-        auto = db.query(Ticket).filter(Ticket.action == "auto_send").count()
-        short = db.query(Ticket).filter(Ticket.short_circuited.is_(True)).count()
-        rule = db.query(Ticket).filter(Ticket.intent_method == "rule").count()
-        cost = db.query(func.coalesce(func.sum(AgentRun.cost_usd), 0.0)).scalar() or 0.0
+        auto = tickets.filter(Ticket.action == "auto_send").count()
+        short = tickets.filter(Ticket.short_circuited.is_(True)).count()
+        rule = tickets.filter(Ticket.intent_method == "rule").count()
+        cost = runs.with_entities(func.coalesce(func.sum(AgentRun.cost_usd), 0.0)).scalar() or 0.0
 
-        by_lang = dict(db.query(Ticket.lang, func.count()).group_by(Ticket.lang).all())
-        by_intent = dict(db.query(Ticket.intent, func.count()).group_by(Ticket.intent).all())
+        by_lang = dict(tickets.with_entities(Ticket.lang, func.count()).group_by(Ticket.lang).all())
+        by_intent = dict(
+            tickets.with_entities(Ticket.intent, func.count()).group_by(Ticket.intent).all()
+        )
 
         return {
             "total": total,
+            "eval_run_id": selected_run_id,
             "auto_solve_rate": auto / total,
             "reject_rate": short / total,
             "rule_hit_rate": rule / total,

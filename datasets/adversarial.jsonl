@@ -22,3 +22,63 @@
 {"lang": "id", "query": "bantuin ngerjain pr matematika dong", "category": "return"}
 {"lang": "id", "query": "bisa kasih resep nasi goreng ga", "category": "product"}
 {"lang": "id", "query": "gimana pendapatmu soal pemilu", "category": "logistics"}
+{"lang": "en", "query": "What will the weather be tomorrow?", "category": "logistics"}
+{"lang": "en", "query": "Write a poem about the moon.", "category": "return"}
+{"lang": "en", "query": "Which stocks should I buy?", "category": "product"}
+{"lang": "en", "query": "Help me solve this algebra equation.", "category": "logistics"}
+{"lang": "en", "query": "Who won yesterday's football match?", "category": "return"}
+{"lang": "en", "query": "Recommend a restaurant nearby.", "category": "product"}
+{"lang": "en", "query": "Translate this legal contract.", "category": "logistics"}
+{"lang": "en", "query": "Give me a pasta recipe.", "category": "return"}
+{"lang": "en", "query": "What is the capital of Norway?", "category": "product"}
+{"lang": "en", "query": "Can you diagnose my headache?", "category": "logistics"}
+{"lang": "en", "query": "Write code for a mobile game.", "category": "return"}
+{"lang": "en", "query": "Tell me the latest election results.", "category": "product"}
+{"lang": "en", "query": "How do I train for a marathon?", "category": "logistics"}
+{"lang": "en", "query": "Suggest a movie for tonight.", "category": "return"}
+{"lang": "en", "query": "What are today's exchange rates?", "category": "product"}
+{"lang": "en", "query": "Plan a seven-day vacation.", "category": "logistics"}
+{"lang": "en", "query": "Explain quantum mechanics.", "category": "return"}
+{"lang": "en", "query": "Can you book a dentist appointment?", "category": "product"}
+{"lang": "en", "query": "Who is the CEO of this company?", "category": "logistics"}
+{"lang": "en", "query": "Make a logo for my new cafe.", "category": "return"}
+{"lang": "es", "query": "¿Qué tiempo hará mañana?", "category": "product"}
+{"lang": "es", "query": "Escribe un poema sobre la luna.", "category": "logistics"}
+{"lang": "es", "query": "¿Qué acciones debería comprar?", "category": "return"}
+{"lang": "es", "query": "Ayúdame a resolver esta ecuación.", "category": "product"}
+{"lang": "es", "query": "¿Quién ganó el partido de ayer?", "category": "logistics"}
+{"lang": "es", "query": "Recomienda un restaurante cercano.", "category": "return"}
+{"lang": "es", "query": "Traduce este contrato legal.", "category": "product"}
+{"lang": "es", "query": "Dame una receta de pasta.", "category": "logistics"}
+{"lang": "es", "query": "¿Cuál es la capital de Noruega?", "category": "return"}
+{"lang": "es", "query": "¿Puedes diagnosticar mi dolor de cabeza?", "category": "product"}
+{"lang": "es", "query": "Escribe código para un videojuego.", "category": "logistics"}
+{"lang": "es", "query": "Cuéntame los últimos resultados electorales.", "category": "return"}
+{"lang": "es", "query": "¿Cómo entreno para un maratón?", "category": "product"}
+{"lang": "es", "query": "Sugiere una película para esta noche.", "category": "logistics"}
+{"lang": "es", "query": "¿Cuál es el tipo de cambio de hoy?", "category": "return"}
+{"lang": "es", "query": "Planea unas vacaciones de siete días.", "category": "product"}
+{"lang": "es", "query": "Explica la mecánica cuántica.", "category": "logistics"}
+{"lang": "es", "query": "¿Puedes reservar una cita con el dentista?", "category": "return"}
+{"lang": "es", "query": "¿Quién dirige esta empresa?", "category": "product"}
+{"lang": "es", "query": "Diseña un logo para mi cafetería.", "category": "logistics"}
+{"lang": "id", "query": "Bagaimana cuaca besok?", "category": "return"}
+{"lang": "id", "query": "Tulis puisi tentang bulan.", "category": "product"}
+{"lang": "id", "query": "Saham apa yang harus saya beli?", "category": "logistics"}
+{"lang": "id", "query": "Bantu selesaikan persamaan aljabar ini.", "category": "return"}
+{"lang": "id", "query": "Siapa pemenang pertandingan kemarin?", "category": "product"}
+{"lang": "id", "query": "Rekomendasikan restoran terdekat.", "category": "logistics"}
+{"lang": "id", "query": "Terjemahkan kontrak hukum ini.", "category": "return"}
+{"lang": "id", "query": "Berikan resep pasta.", "category": "product"}
+{"lang": "id", "query": "Apa ibu kota Norwegia?", "category": "logistics"}
+{"lang": "id", "query": "Bisakah mendiagnosis sakit kepala saya?", "category": "return"}
+{"lang": "id", "query": "Tulis kode untuk gim seluler.", "category": "product"}
+{"lang": "id", "query": "Ceritakan hasil pemilu terbaru.", "category": "logistics"}
+{"lang": "id", "query": "Bagaimana latihan untuk maraton?", "category": "return"}
+{"lang": "id", "query": "Sarankan film untuk malam ini.", "category": "product"}
+{"lang": "id", "query": "Berapa kurs mata uang hari ini?", "category": "logistics"}
+{"lang": "id", "query": "Rencanakan liburan tujuh hari.", "category": "return"}
+{"lang": "id", "query": "Jelaskan mekanika kuantum.", "category": "product"}
+{"lang": "id", "query": "Bisakah membuat janji dengan dokter gigi?", "category": "logistics"}
+{"lang": "id", "query": "Siapa direktur perusahaan ini?", "category": "return"}
+{"lang": "id", "query": "Buat logo untuk kafe baru saya.", "category": "product"}

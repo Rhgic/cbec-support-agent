@@ -11,7 +11,7 @@
 对每个 t 同时给出两条曲线，人工取二者都可接受的拐点，替换 retrieve.py 的 THRESHOLD。
 读曲线、拍板阈值是作者自留的面试论据——脚本只产出数据，不替你决定阈值。
 
-前置：先 build_knowledge + embed_knowledge 把知识库灌进 pgvector。
+前置：先 build_knowledge + embed_knowledge 把知识库向量灌进 Milvus。
 用法：
   python -m scripts.sweep_threshold --lo 0.40 --hi 0.80 --step 0.05
 """

@@ -3,7 +3,7 @@
 为什么集中在一个文件：所有表都依赖同一份 Base.metadata，Alembic 自动迁移与
 create_all 都从这里取元信息，拆文件反而要维护 import 顺序。
 
-向量列统一用 pgvector.sqlalchemy.Vector(1024)，与 BGE-m3 输出维度一致。
+知识文本与元数据存 PostgreSQL；向量存 Milvus。历史 pgvector 列仅保留为回退路径。
 """
 import sqlalchemy as sa
 from pgvector.sqlalchemy import Vector
@@ -126,6 +126,8 @@ class Ticket(Base):
     risk_level = Column(String(8), nullable=True)
     action = Column(String(16), nullable=True)
     status = Column(String(16), nullable=False, server_default=sa.text("'processing'"))
+    # 端到端评测批次标记；线上工单为空，便于精确筛选/清理评测数据。
+    eval_run_id = Column(String(36), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -172,5 +174,9 @@ class Review(Base):
     reviewer_action = Column(String(16), nullable=False)
     # 人工标注的失败原因，用于离线归因
     failure_tags = Column(ARRAY(Text), nullable=True)
+    # 人工纠正标签只用于离线评测/规则改进，不在线上自动学习。
+    corrected_lang = Column(String(8), nullable=True)
+    corrected_intent = Column(String(16), nullable=True)
+    corrected_risk_level = Column(String(8), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

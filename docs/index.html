@@ -271,35 +271,35 @@
     <h2 class="sec">量化指标</h2>
     <div class="metrics">
       <div class="metric">
-        <div class="mv">0.45</div><div class="mk">检索短路阈值 · 实测曲线拐点（0.60 会误拒 45% 真实问题）</div>
+        <div class="mv">0.45</div><div class="mk">检索短路阈值 · 扩样实测取舍（误拒 0.9% / 对抗暴露 3.6%；0.50 则为 8.9% / 0%）</div>
         <span class="mtag done">实测</span>
       </div>
       <div class="metric">
-        <div class="mv">0%</div><div class="mk">对抗集无依据回答率（阈值 0.45，24 条对抗查询）</div>
+        <div class="mv">3.6%</div><div class="mk">对抗集阈值暴露率（阈值 0.45，84 条对抗查询；暴露后仍受引用校验与风险闸门拦截）</div>
         <span class="mtag done">实测</span>
       </div>
       <div class="metric">
-        <div class="mv">7.7%</div><div class="mk">拒答率 · 真实问题被误短路的比例（越低越好，78 条）</div>
+        <div class="mv">0.9%</div><div class="mk">误拒率 · 有答案查询被短路的比例（越低越好，112 条）</div>
         <span class="mtag done">实测</span>
       </div>
       <div class="metric">
-        <div class="mv">100%</div><div class="mk">高风险规则拦截召回（eval→补词库→复测闭环，28 条风险标注）</div>
+        <div class="mv">100%</div><div class="mk">高风险规则拦截召回（47/47；风险标注共 100 条，误升 high 5.7%）</div>
         <span class="mtag done">实测</span>
       </div>
       <div class="metric">
-        <div class="mv todo">34%</div><div class="mk">规则前置省下的 LLM 调用比例（合成集，product 类目受限于语种识别，进行中）</div>
-        <span class="mtag wait">进行中</span>
-      </div>
-      <div class="metric">
-        <div class="mv">28%</div><div class="mk">自动解决率（eval_e2e，100 条三语种工单；修复 tools 过度拦截前为 17%。当前评测集 0/100 条带订单号，结构性上限约 36%）</div>
+        <div class="mv">46.9%</div><div class="mk">规则前置省下的 LLM 调用比例（75/160；命中内误判率 0%）</div>
         <span class="mtag done">实测</span>
       </div>
       <div class="metric">
-        <div class="mv todo">XXX</div><div class="mk">并发压测 QPS</div>
-        <span class="mtag wait">待压测</span>
+        <div class="mv">35%</div><div class="mk">自动解决率（eval_e2e，160 条三语种工单；含 60 条带可查订单号样本，错误 0 条）</div>
+        <span class="mtag done">实测</span>
       </div>
       <div class="metric">
-        <div class="mv">12.3 s</div><div class="mk">P50 端到端时延（eval_e2e 串行、含真实 LLM 调用；<b>非</b>并发压测下的延迟）</div>
+        <div class="mv">7.67</div><div class="mk">并发压测 HTTP QPS（Locust 50 用户 / 2 min；成功 QPS 1.53，80.1% POST 被限流护栏按预期返回 429）</div>
+        <span class="mtag done">实测</span>
+      </div>
+      <div class="metric">
+        <div class="mv">12.8 s</div><div class="mk">P50 端到端时延（eval_e2e 串行、含真实 LLM 调用；<b>非</b>并发压测下的延迟）</div>
         <span class="mtag done">实测</span>
       </div>
     </div>
@@ -312,22 +312,22 @@
       </figcaption>
       <svg viewBox="0 0 640 340" width="100%" role="img" aria-labelledby="swT swD" style="display:block;max-width:100%;">
         <title id="swT">检索短路阈值扫描曲线</title>
-        <desc id="swD">阈值 0.30 到 0.65。幻觉暴露率随阈值升高从 70.8% 降到 0.45 处的 0；误拒率在 0.45 后升至 0.60 的 45.5%、0.65 的 72.7%。0.45 是两者唯一同时为 0 的点。</desc>
+        <desc id="swD">扩样后阈值 0.30 到 0.65 的权衡曲线。0.45 处误拒率 0.9%、对抗暴露率 3.6%；0.50 处误拒率 8.9%、对抗暴露率 0%。</desc>
         <g style="stroke:var(--line-2);stroke-width:1;">
           <line x1="44" y1="16" x2="620" y2="16"/><line x1="44" y1="88" x2="620" y2="88"/>
           <line x1="44" y1="160" x2="620" y2="160"/><line x1="44" y1="232" x2="620" y2="232"/>
           <line x1="44" y1="304" x2="620" y2="304"/>
         </g>
         <g style="fill:var(--faint);font-family:var(--mono);font-size:11px;" text-anchor="end">
-          <text x="38" y="20">80%</text><text x="38" y="92">60%</text><text x="38" y="164">40%</text>
-          <text x="38" y="236">20%</text><text x="38" y="307">0%</text>
+          <text x="38" y="20">100%</text><text x="38" y="92">75%</text><text x="38" y="164">50%</text>
+          <text x="38" y="236">25%</text><text x="38" y="307">0%</text>
         </g>
         <line x1="290.9" y1="16" x2="290.9" y2="304" style="stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 4;"/>
-        <polyline fill="none" style="stroke:var(--stop);stroke-width:2;stroke-linejoin:round;" points="44,49.1 126.3,124 208.6,259 290.9,304 373.1,304 455.4,304 537.7,304 620,304"/>
-        <polyline fill="none" style="stroke:var(--warn);stroke-width:2;stroke-linejoin:round;stroke-dasharray:6 4;" points="44,304 126.3,304 208.6,304 290.9,304 373.1,255 455.4,222.3 537.7,140.2 620,42.3"/>
-        <g style="fill:var(--stop);"><circle cx="44" cy="49.1" r="3"/><circle cx="126.3" cy="124" r="3"/><circle cx="208.6" cy="259" r="3"/></g>
-        <g style="fill:var(--warn);"><circle cx="373.1" cy="255" r="3"/><circle cx="455.4" cy="222.3" r="3"/><circle cx="537.7" cy="140.2" r="3"/><circle cx="620" cy="42.3" r="3"/></g>
-        <circle cx="290.9" cy="304" r="4.5" style="fill:var(--panel);stroke:var(--accent);stroke-width:2;"/>
+        <polyline fill="none" style="stroke:var(--stop);stroke-width:2;stroke-linejoin:round;" points="44,64.1 126.3,136.1 208.6,228.5 290.9,293.6 373.1,304 455.4,304 537.7,304 620,304"/>
+        <polyline fill="none" style="stroke:var(--warn);stroke-width:2;stroke-linejoin:round;stroke-dasharray:6 4;" points="44,304 126.3,304 208.6,304 290.9,301.4 373.1,278.4 455.4,242.4 537.7,175.6 620,88"/>
+        <g style="fill:var(--stop);"><circle cx="44" cy="64.1" r="3"/><circle cx="126.3" cy="136.1" r="3"/><circle cx="208.6" cy="228.5" r="3"/><circle cx="290.9" cy="293.6" r="3"/></g>
+        <g style="fill:var(--warn);"><circle cx="290.9" cy="301.4" r="3"/><circle cx="373.1" cy="278.4" r="3"/><circle cx="455.4" cy="242.4" r="3"/><circle cx="537.7" cy="175.6" r="3"/><circle cx="620" cy="88" r="3"/></g>
+        <circle cx="290.9" cy="297.5" r="4.5" style="fill:var(--panel);stroke:var(--accent);stroke-width:2;"/>
         <g style="fill:var(--faint);font-family:var(--mono);font-size:11px;" text-anchor="middle">
           <text x="44" y="322">0.30</text><text x="126.3" y="322">0.35</text><text x="208.6" y="322">0.40</text>
           <text x="290.9" y="322" style="fill:var(--accent);font-weight:700;">0.45</text>
@@ -335,14 +335,13 @@
           <text x="537.7" y="322">0.60</text><text x="620" y="322">0.65</text>
         </g>
       </svg>
-      <div class="mono" style="margin-top:8px;font-size:12px;color:var(--faint);text-align:center;">阈值 0.45：两类错误同时为 0（唯一拐点）· 0.60：误拒 45.5% 真实问题</div>
+      <div class="mono" style="margin-top:8px;font-size:12px;color:var(--faint);text-align:center;">阈值 0.45：误拒 0.9% / 对抗暴露 3.6% · 0.50：误拒 8.9% / 对抗暴露 0%</div>
     </figure>
 
-    <p class="metrics-note">「实测」为当前数据集上跑通的真实结果：100 条多语种工单、22 条有答案查询、24 条对抗查询、
-      28 条风险标注。数据为合成（政策文本 / 物流查询真实），量级待接入真实工单后定稿。
-      「进行中 / 待打通」如实标出未完成项——<strong>不把目标值当已达成写</strong>，这本身是本项目的一部分。
-      高风险召回的 100% 来自一条可复现的评测闭环：eval 先抓到一条西语漏网（承诺词库缺 “devolveremos”），
-      补词后复测回到 13/13，且过度拦截率不变——数字背后是「评测→定位→修复→复测」，不是一句口号。</p>
+    <p class="metrics-note">「实测」为当前扩样数据上跑通的真实结果：160 条多语种工单（60 条带可查种子订单号）、
+      112 条有答案查询、84 条对抗查询、100 条风险标注。数据仍为合成样本，量级待接入真实工单后定稿。
+      高风险召回的 100% 来自可复现的评测闭环；扩样后仍为 47/47，误升 high 率由旧小样本的 17.6%
+      降为 5.7%。数字背后是「评测→定位→修复→复测」，不是一句口号。</p>
   </section>
 
   <!-- 5b. 业务价值 -->
@@ -353,18 +352,18 @@
         <div class="pk" style="color:var(--accent)">省人力</div>
         <h3>每 +10% 自动解决率 ≈ 少 1–2 名客服</h3>
         <p class="pain">按客服月薪 6–8k、单人产能估算，约 <b style="color:var(--ink)">8–20 万/年</b>。多语种 7×24 排班本就难招，自动化价值在旺季放大。</p>
-        <div class="fix" style="color:var(--faint);">依据：拒答率 7.7%（真实问题极少误拒）+ 规则前置 34% 免调 LLM。自动解决率已端到端实测 <b style="color:var(--ink)">28%</b>（n=100）。<b style="color:var(--warn)">人力折算仍为估算 · 须接真实工单与真实规模复核</b></div>
+        <div class="fix" style="color:var(--faint);">依据：有答案查询误拒率 0.9% + 规则前置 46.9% 免调 LLM。自动解决率已端到端实测 <b style="color:var(--ink)">35%</b>（n=160）。<b style="color:var(--warn)">人力折算仍为估算 · 须接真实工单与真实规模复核</b></div>
       </div>
       <div class="pcard">
         <div class="pk" style="color:var(--accent)">保权重</div>
         <h3>护住 ODR &lt; 1%，避免 listing 被压</h3>
         <p class="pain">AI 乱答售后 → 买家开纠纷/差评 → ODR 上升 → 平台限流甚至封 listing。旺季一次断掉主力 SKU 现金流，<b style="color:var(--ink)">损失可达几十万级</b>。</p>
-        <div class="fix" style="color:var(--faint);">依据：高风险拦截召回 100% + 对抗集无依据回答 0%。这是「避免损失」，比「节省」对老板更痛。</div>
+        <div class="fix" style="color:var(--faint);">依据：高风险拦截召回 100%；阈值 0.45 下对抗暴露 3.6%，暴露后仍有引用校验与风险闸门二次拦截。这是「避免损失」，比「节省」对老板更痛。</div>
       </div>
       <div class="pcard">
         <div class="pk" style="color:var(--accent)">控成本</div>
         <h3>大规模工单，LLM 成本可控且防刷爆</h3>
-        <p class="pain">规则前置 34% 免调 LLM + 结果缓存 + 全局熔断，防止大促当天被刷穿；退款/赔付绝不自动，堵住羊毛党套 AI 退款。</p>
+        <p class="pain">规则前置 46.9% 免调 LLM + 结果缓存 + 全局熔断，防止大促当天被刷穿；退款/赔付绝不自动，堵住羊毛党套 AI 退款。</p>
         <div class="fix" style="color:var(--faint);">依据：单均成本按 DeepSeek 公开价估算。<b style="color:var(--warn)">估算 · 量级待压测</b></div>
       </div>
     </div>
@@ -378,7 +377,7 @@
     <ul class="bounds" style="list-style:none;padding:0;margin:0">
       <li><b>PII 脱敏仅覆盖结构化字段</b>（邮箱 / 电话 / 单号）。<span>小语种人名、地址正则召回有限，需 NER 模型，当前范围未做——明确记为短板，不声称已覆盖。</span></li>
       <li><b>订单数据为 mock</b>。<span>但运单号真实、物流查询真实、知识库与政策文本为真实来源——只有身份与订单虚构。</span></li>
-      <li><b>检索阈值基于种子数据集标定</b>（0.45）。<span>方法与曲线可复现，扩充数据集后需重跑 sweep 复核再定稿。</span></li>
+      <li><b>检索阈值基于合成扩样集标定</b>（0.45）。<span>112 条有答案 / 84 条对抗已复测；接入真实工单后仍需重跑 sweep。</span></li>
     </ul>
   </section>
 

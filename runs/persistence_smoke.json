@@ -1,0 +1,748 @@
+{
+  "summary": {
+    "n": 24,
+    "auto_solve_rate": 0.2916666666666667,
+    "auto_send": 7,
+    "grounded_rate": 0.8947368421052632,
+    "grounded": 17,
+    "reached_generate": 19,
+    "short_circuit_rate": 0.041666666666666664,
+    "errors": 0,
+    "by_intent": {
+      "logistics": {
+        "n": 6,
+        "auto": 0
+      },
+      "other": {
+        "n": 6,
+        "auto": 0
+      },
+      "product": {
+        "n": 6,
+        "auto": 6
+      },
+      "return": {
+        "n": 6,
+        "auto": 1
+      }
+    },
+    "by_lang": {
+      "en": {
+        "n": 8,
+        "auto": 2
+      },
+      "es": {
+        "n": 8,
+        "auto": 2
+      },
+      "id": {
+        "n": 8,
+        "auto": 3
+      }
+    },
+    "block_reasons": {
+      "llm_layer_judgement": 9,
+      "rule4_tool_error": 8,
+      "rule1_intent_other": 4,
+      "gen_no_citation": 2,
+      "upstream_forced_high": 2,
+      "rule3_short_circuit": 1
+    },
+    "p50_latency_ms": 13817,
+    "eval_run_id": "97e88cec-a125-4da4-9c26-d265d309ece9"
+  },
+  "records": [
+    {
+      "ticket_id": 304,
+      "text": "where is my order?? its been like 2 weeks now",
+      "gold_lang": "en",
+      "gold_intent": "logistics",
+      "lang": "en",
+      "intent": "logistics",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.6239581108093262,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [
+        "file://logistics_faq.md",
+        "file://shipping_time.md"
+      ],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "工具调用失败: ['未从工单中提取到订单/运单号']"
+      ],
+      "reason_buckets": [
+        "rule4_tool_error"
+      ],
+      "reached_generate": true,
+      "latency_ms": 31936,
+      "error": null
+    },
+    {
+      "ticket_id": 305,
+      "text": "still havent gotten anything and i ordered on the 3rd",
+      "gold_lang": "en",
+      "gold_intent": "logistics",
+      "lang": "en",
+      "intent": "logistics",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.5555546283721924,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [
+        "file://logistics_faq.md",
+        "file://shipping_time.md"
+      ],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "工具调用失败: ['未从工单中提取到订单/运单号']"
+      ],
+      "reason_buckets": [
+        "rule4_tool_error"
+      ],
+      "reached_generate": true,
+      "latency_ms": 10441,
+      "error": null
+    },
+    {
+      "ticket_id": 306,
+      "text": "thanks for the fast shipping!",
+      "gold_lang": "en",
+      "gold_intent": "other",
+      "lang": "en",
+      "intent": "logistics",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.557832658290863,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "回复缺少证据引用，升级 high",
+        "上游已强制 high"
+      ],
+      "reason_buckets": [
+        "gen_no_citation",
+        "upstream_forced_high"
+      ],
+      "reached_generate": true,
+      "latency_ms": 5354,
+      "error": null
+    },
+    {
+      "ticket_id": 307,
+      "text": "this is honestly the worst service ive dealt with",
+      "gold_lang": "en",
+      "gold_intent": "other",
+      "lang": "en",
+      "intent": "other",
+      "intent_method": "llm",
+      "intent_confidence": 0.9,
+      "retrieval_score": null,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "intent=other，非业务意图"
+      ],
+      "reason_buckets": [
+        "rule1_intent_other"
+      ],
+      "reached_generate": false,
+      "latency_ms": 6776,
+      "error": null
+    },
+    {
+      "ticket_id": 308,
+      "text": "the earbuds only last like 3 hrs is that normal",
+      "gold_lang": "en",
+      "gold_intent": "product",
+      "lang": "en",
+      "intent": "product",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.5866957306861877,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://product_faq.md",
+        "file://battery_power.md"
+      ],
+      "risk_level": "low",
+      "action": "auto_send",
+      "risk_reasons": [
+        "Simple factual reply providing product specifications and troubleshooting steps.",
+        "No financial commitment or apology offering compensation.",
+        "Directs customer to contact support for warranty service if problem persists."
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 14923,
+      "error": null
+    },
+    {
+      "ticket_id": 309,
+      "text": "is this jacket actually waterproof or nah",
+      "gold_lang": "en",
+      "gold_intent": "product",
+      "lang": "en",
+      "intent": "product",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.5411815643310547,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://waterproof_sizing.md",
+        "file://product_faq.md",
+        "file://care_usage.md"
+      ],
+      "risk_level": "low",
+      "action": "auto_send",
+      "risk_reasons": [
+        "Simple factual reply about product specification.",
+        "No financial commitment or apology offered.",
+        "No ambiguous language requiring human review."
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 17246,
+      "error": null
+    },
+    {
+      "ticket_id": 310,
+      "text": "i wanna return these shoes they dont fit",
+      "gold_lang": "en",
+      "gold_intent": "return",
+      "lang": "en",
+      "intent": "return",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.5685814023017883,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [
+        "file://return_shipping.md",
+        "file://return_policy.md",
+        "file://refund_timeline.md"
+      ],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "工具调用失败: ['未从工单中提取到订单/运单号']"
+      ],
+      "reason_buckets": [
+        "rule4_tool_error"
+      ],
+      "reached_generate": true,
+      "latency_ms": 7685,
+      "error": null
+    },
+    {
+      "ticket_id": 311,
+      "text": "how do i get my money back for a broken item",
+      "gold_lang": "en",
+      "gold_intent": "return",
+      "lang": "en",
+      "intent": "return",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.6307413578033447,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://damaged_lost.md",
+        "file://return_policy.md"
+      ],
+      "risk_level": "mid",
+      "action": "quick_review",
+      "risk_reasons": [
+        "Reply includes an apology and informs about refund/replacement, which involves financial commitment.",
+        "Instructs a multi-step process (file support ticket with specific details), which may benefit from human review to ensure clarity and accuracy."
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 14328,
+      "error": null
+    },
+    {
+      "ticket_id": 312,
+      "text": "hola donde esta mi pedido ya pague hace rato",
+      "gold_lang": "es",
+      "gold_intent": "logistics",
+      "lang": "es",
+      "intent": "logistics",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.5463384389877319,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [
+        "file://logistics_faq.md"
+      ],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "工具调用失败: ['未从工单中提取到订单/运单号']"
+      ],
+      "reason_buckets": [
+        "rule4_tool_error"
+      ],
+      "reached_generate": true,
+      "latency_ms": 7549,
+      "error": null
+    },
+    {
+      "ticket_id": 313,
+      "text": "no me llega el paquete y ya pasaron 2 semanas",
+      "gold_lang": "es",
+      "gold_intent": "logistics",
+      "lang": "es",
+      "intent": "logistics",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.6409216523170471,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [
+        "file://logistics_faq.md",
+        "file://shipping_time.md"
+      ],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "工具调用失败: ['未从工单中提取到订单/运单号']"
+      ],
+      "reason_buckets": [
+        "rule4_tool_error"
+      ],
+      "reached_generate": true,
+      "latency_ms": 10245,
+      "error": null
+    },
+    {
+      "ticket_id": 314,
+      "text": "gracias por el envio rapido!",
+      "gold_lang": "es",
+      "gold_intent": "other",
+      "lang": "es",
+      "intent": "other",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": null,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "intent=other，非业务意图"
+      ],
+      "reason_buckets": [
+        "rule1_intent_other"
+      ],
+      "reached_generate": false,
+      "latency_ms": 4436,
+      "error": null
+    },
+    {
+      "ticket_id": 315,
+      "text": "es el peor servicio que he visto la verdad",
+      "gold_lang": "es",
+      "gold_intent": "other",
+      "lang": "es",
+      "intent": "other",
+      "intent_method": "llm",
+      "intent_confidence": 0.9,
+      "retrieval_score": null,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "intent=other，非业务意图"
+      ],
+      "reason_buckets": [
+        "rule1_intent_other"
+      ],
+      "reached_generate": false,
+      "latency_ms": 4682,
+      "error": null
+    },
+    {
+      "ticket_id": 316,
+      "text": "los audifonos duran como 3 horas es normal",
+      "gold_lang": "es",
+      "gold_intent": "product",
+      "lang": "es",
+      "intent": "product",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.5793218612670898,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://product_faq.md",
+        "file://battery_power.md"
+      ],
+      "risk_level": "low",
+      "action": "auto_send",
+      "risk_reasons": [
+        "The reply provides factual product specifications and simple troubleshooting steps.",
+        "No apology or compensation is offered.",
+        "No financial commitment or ambiguous language.",
+        "The reply is safe to auto-send as a standard customer service response."
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 21062,
+      "error": null
+    },
+    {
+      "ticket_id": 317,
+      "text": "esta chaqueta es impermeable de verdad",
+      "gold_lang": "es",
+      "gold_intent": "product",
+      "lang": "es",
+      "intent": "product",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.4657759666442871,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://waterproof_sizing.md",
+        "file://product_faq.md"
+      ],
+      "risk_level": "low",
+      "action": "auto_send",
+      "risk_reasons": [
+        "Simple factual reply providing product information about waterproof rating.",
+        "No financial commitment, apology, or compensation offered."
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 14110,
+      "error": null
+    },
+    {
+      "ticket_id": 318,
+      "text": "quiero devolver estos zapatos no me quedan",
+      "gold_lang": "es",
+      "gold_intent": "return",
+      "lang": "es",
+      "intent": "return",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.5337783098220825,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [
+        "file://return_policy.md",
+        "file://return_shipping.md"
+      ],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "工具调用失败: ['未从工单中提取到订单/运单号']"
+      ],
+      "reason_buckets": [
+        "rule4_tool_error"
+      ],
+      "reached_generate": true,
+      "latency_ms": 13817,
+      "error": null
+    },
+    {
+      "ticket_id": 319,
+      "text": "como pido el reembolso vino roto",
+      "gold_lang": "es",
+      "gold_intent": "return",
+      "lang": "es",
+      "intent": "return",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.523973822593689,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://damaged_lost.md",
+        "file://refund_timeline.md"
+      ],
+      "risk_level": "mid",
+      "action": "quick_review",
+      "risk_reasons": [
+        "Apology without clear compensation or next steps",
+        "Multi-step process that could benefit from human review to ensure clarity",
+        "Ambiguous language around refund/replacement decision"
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 16745,
+      "error": null
+    },
+    {
+      "ticket_id": 320,
+      "text": "min pesanan saya blm sampe udh lama bgt",
+      "gold_lang": "id",
+      "gold_intent": "logistics",
+      "lang": "id",
+      "intent": "logistics",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.5485209226608276,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [
+        "file://shipping_time.md",
+        "file://logistics_faq.md"
+      ],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "工具调用失败: ['未从工单中提取到订单/运单号']"
+      ],
+      "reason_buckets": [
+        "rule4_tool_error"
+      ],
+      "reached_generate": true,
+      "latency_ms": 8137,
+      "error": null
+    },
+    {
+      "ticket_id": 321,
+      "text": "kok resi ga update update ya",
+      "gold_lang": "id",
+      "gold_intent": "logistics",
+      "lang": "id",
+      "intent": "logistics",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.4282591938972473,
+      "short_circuited": true,
+      "tool_errors": [],
+      "citations": [],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "检索短路，无足够依据"
+      ],
+      "reason_buckets": [
+        "rule3_short_circuit"
+      ],
+      "reached_generate": false,
+      "latency_ms": 7945,
+      "error": null
+    },
+    {
+      "ticket_id": 322,
+      "text": "makasih pengiriman cepet!",
+      "gold_lang": "id",
+      "gold_intent": "other",
+      "lang": "id",
+      "intent": "logistics",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.554504930973053,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "回复缺少证据引用，升级 high",
+        "上游已强制 high"
+      ],
+      "reason_buckets": [
+        "gen_no_citation",
+        "upstream_forced_high"
+      ],
+      "reached_generate": true,
+      "latency_ms": 5707,
+      "error": null
+    },
+    {
+      "ticket_id": 323,
+      "text": "pelayanan terburuk yang pernah saya alami",
+      "gold_lang": "id",
+      "gold_intent": "other",
+      "lang": "id",
+      "intent": "other",
+      "intent_method": "llm",
+      "intent_confidence": 0.9,
+      "retrieval_score": null,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "intent=other，非业务意图"
+      ],
+      "reason_buckets": [
+        "rule1_intent_other"
+      ],
+      "reached_generate": false,
+      "latency_ms": 4520,
+      "error": null
+    },
+    {
+      "ticket_id": 324,
+      "text": "baterai earphone cuma 3 jam normal ga sih",
+      "gold_lang": "id",
+      "gold_intent": "product",
+      "lang": "id",
+      "intent": "product",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.5895853638648987,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://battery_power.md",
+        "file://product_faq.md"
+      ],
+      "risk_level": "low",
+      "action": "auto_send",
+      "risk_reasons": [
+        "Provides factual product information and standard troubleshooting advice.",
+        "Does not offer compensation or any financial commitment.",
+        "Apology is a routine polite phrase, not ambiguous or action-less.",
+        "Directs customer to contact support for further help if issue persists."
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 25650,
+      "error": null
+    },
+    {
+      "ticket_id": 325,
+      "text": "jaket ini beneran tahan air",
+      "gold_lang": "id",
+      "gold_intent": "product",
+      "lang": "id",
+      "intent": "product",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.5284690856933594,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://waterproof_sizing.md",
+        "file://product_faq.md"
+      ],
+      "risk_level": "low",
+      "action": "auto_send",
+      "risk_reasons": [
+        "Simple factual reply about product specification without any financial commitment or apology offering compensation."
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 22715,
+      "error": null
+    },
+    {
+      "ticket_id": 326,
+      "text": "mau retur sepatunya ga muat",
+      "gold_lang": "id",
+      "gold_intent": "return",
+      "lang": "id",
+      "intent": "return",
+      "intent_method": "llm",
+      "intent_confidence": 0.95,
+      "retrieval_score": 0.5823396444320679,
+      "short_circuited": false,
+      "tool_errors": [
+        "未从工单中提取到订单/运单号"
+      ],
+      "citations": [
+        "file://return_shipping.md",
+        "file://return_policy.md",
+        "file://refund_timeline.md"
+      ],
+      "risk_level": "high",
+      "action": "human_required",
+      "risk_reasons": [
+        "工具调用失败: ['未从工单中提取到订单/运单号']"
+      ],
+      "reason_buckets": [
+        "rule4_tool_error"
+      ],
+      "reached_generate": true,
+      "latency_ms": 14697,
+      "error": null
+    },
+    {
+      "ticket_id": 327,
+      "text": "gimana cara refund barangnya datang rusak",
+      "gold_lang": "id",
+      "gold_intent": "return",
+      "lang": "en",
+      "intent": "return",
+      "intent_method": "rule",
+      "intent_confidence": 0.85,
+      "retrieval_score": 0.6134946346282959,
+      "short_circuited": false,
+      "tool_errors": [],
+      "citations": [
+        "file://damaged_lost.md"
+      ],
+      "risk_level": "low",
+      "action": "auto_send",
+      "risk_reasons": [
+        "Provides clear, factual steps for handling damaged items.",
+        "No apology or compensation offered; action is contingent on verification.",
+        "Simple policy explanation suitable for auto-send."
+      ],
+      "reason_buckets": [
+        "llm_layer_judgement"
+      ],
+      "reached_generate": true,
+      "latency_ms": 19774,
+      "error": null
+    }
+  ]
+}

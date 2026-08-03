@@ -3,40 +3,46 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>跨境客服 · Agent 查验台</title>
-  <link rel="stylesheet" href="app.css" />
+  <title>跨境客服 · AI 收件箱</title>
+  <link rel="stylesheet" href="app.css?v=agent-inbox" />
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
-      <div class="side-logo">境</div>
-      <nav class="side-nav">
-        <button class="side-item active" data-view="console" aria-label="查验台" title="查验台"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
-        <button class="side-item" data-view="kb" aria-label="知识库" title="知识库"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a1 1 0 011-1h13v18H6a1 1 0 01-1-1z"/><path d="M9 3v18"/></svg></button>
-        <button class="side-item" data-view="metrics" aria-label="指标" title="指标"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></button>
-      </nav>
-    </aside>
     <div class="app-body">
 
   <header class="topbar">
     <div class="brand-lines">
-      <h1>跨境客服 · Agent 查验台</h1>
-      <div class="sub">规则粗筛 → 多语种检索 → 工具调用 → 风险闸门</div>
+      <h1>跨境客服收件箱</h1>
+      <div class="sub">平台消息实时进入，AI 在右侧给出可执行建议</div>
     </div>
     <div class="spacer"></div>
-    <div class="chips-inline">
-      <span class="ci">市场 <b>EN · ES · ID</b></span>
-      <span class="ci">护栏 <b>限流 · 配额 · 熔断</b></span>
-    </div>
-    <span class="feed"><span id="feed-dot" class="dot sample"></span><span id="feed-label">样例数据</span></span>
+    <nav class="view-switcher" aria-label="页面导航">
+      <button class="top-link active" data-view="console">工单</button>
+      <button class="top-link" data-view="kb">知识库</button>
+      <button class="top-link" data-view="metrics">评测</button>
+    </nav>
+      <span class="feed"><span id="feed-dot" class="dot sample"></span><span id="feed-label">样例模式</span></span>
   </header>
 
   <div id="view-console" class="view">
+  <section class="flow-guide" aria-label="操作说明">
+    <div class="flow-guide-inner">
+      <span class="guide-title">工作流</span>
+      <div class="guide-step"><b>1</b><span>从左侧打开客户会话</span></div>
+      <div class="guide-step"><b>2</b><span>中间查看原始消息和译文</span></div>
+      <div class="guide-step"><b>3</b><span>右侧采纳、修改或退回 AI 建议</span></div>
+    </div>
+  </section>
   <main class="shell">
     <aside class="rail">
       <section class="card">
-        <header><h2>新工单</h2></header>
-        <div class="body">
+        <header><h2>会话收件箱</h2><span class="count" id="tk-count"></span></header>
+        <div class="tickets" id="tickets"></div>
+      </section>
+
+      <details class="try-agent">
+        <summary>模拟接收一条平台消息</summary>
+        <div class="try-agent-body">
           <textarea id="ticket-input" class="input" placeholder="粘贴任意市场语言的客户消息…"></textarea>
           <div class="samples" id="samples">
             <button class="chip" data-sc="logi">🇬🇧 where's my order</button>
@@ -48,12 +54,7 @@
             <span class="detected">识别语种 <b id="detected">—</b></span>
           </div>
         </div>
-      </section>
-
-      <section class="card">
-        <header><h2>待查验队列</h2><span class="count" id="tk-count"></span></header>
-        <div class="tickets" id="tickets"></div>
-      </section>
+      </details>
     </aside>
 
     <section class="detail">
@@ -96,12 +97,12 @@
 
   <div id="view-metrics" class="view" hidden>
     <div class="view-wrap">
-      <div class="view-head"><h2>指标</h2><p>合成数据集上的实测结果（100 条多语种工单 / 22 有答案查询 / 24 对抗查询 / 34 条风险标注）。接入真实工单后需重跑复核。</p></div>
+      <div class="view-head"><h2>指标</h2><p>合成扩样集上的实测结果（160 条多语种工单 / 112 有答案查询 / 84 对抗查询 / 100 条风险标注）。接入真实工单后需重跑复核。</p></div>
       <div class="metrics-grid">
-        <div class="mcard"><div class="mv">0.45</div><div class="mk">检索短路阈值 · 曲线拐点</div></div>
+        <div class="mcard"><div class="mv">35%</div><div class="mk">自动解决率 · 56/160</div></div>
         <div class="mcard"><div class="mv">100%</div><div class="mk">高风险拦截召回</div></div>
-        <div class="mcard"><div class="mv">0%</div><div class="mk">对抗集无依据回答率</div></div>
-        <div class="mcard"><div class="mv">34%</div><div class="mk">规则前置省下的 LLM 调用</div></div>
+        <div class="mcard"><div class="mv">3.6%</div><div class="mk">对抗集阈值暴露率</div></div>
+        <div class="mcard"><div class="mv">46.9%</div><div class="mk">规则前置省下的 LLM 调用</div></div>
       </div>
       <div class="card" style="padding:18px 18px 12px;">
         <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px;font-size:12.5px;color:var(--muted);">
@@ -109,22 +110,22 @@
           <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:16px;border-top:2px dashed var(--check);"></span>误拒率（有答案却短路）</span>
           <span style="display:inline-flex;align-items:center;gap:6px;color:var(--link);">▲ 0.45 取值</span>
         </div>
-        <svg viewBox="0 0 640 340" width="100%" role="img" aria-label="检索阈值扫描曲线：0.45 是误拒率与幻觉暴露率唯一同时为 0 的拐点" style="display:block;max-width:100%;">
+        <svg viewBox="0 0 640 340" width="100%" role="img" aria-label="扩样后的检索阈值扫描曲线：0.45 处误拒率 0.9%，对抗暴露率 3.6%" style="display:block;max-width:100%;">
           <g style="stroke:var(--line);stroke-width:1;">
             <line x1="44" y1="16" x2="620" y2="16"/><line x1="44" y1="88" x2="620" y2="88"/>
             <line x1="44" y1="160" x2="620" y2="160"/><line x1="44" y1="232" x2="620" y2="232"/>
             <line x1="44" y1="304" x2="620" y2="304"/>
           </g>
           <g style="fill:var(--faint);font-family:var(--mono);font-size:11px;" text-anchor="end">
-            <text x="38" y="20">80%</text><text x="38" y="92">60%</text><text x="38" y="164">40%</text>
-            <text x="38" y="236">20%</text><text x="38" y="307">0%</text>
+            <text x="38" y="20">100%</text><text x="38" y="92">75%</text><text x="38" y="164">50%</text>
+            <text x="38" y="236">25%</text><text x="38" y="307">0%</text>
           </g>
           <line x1="290.9" y1="16" x2="290.9" y2="304" style="stroke:var(--link);stroke-width:1.5;stroke-dasharray:4 4;"/>
-          <polyline fill="none" style="stroke:var(--hold);stroke-width:2;stroke-linejoin:round;" points="44,49.1 126.3,124 208.6,259 290.9,304 373.1,304 455.4,304 537.7,304 620,304"/>
-          <polyline fill="none" style="stroke:var(--check);stroke-width:2;stroke-linejoin:round;stroke-dasharray:6 4;" points="44,304 126.3,304 208.6,304 290.9,304 373.1,255 455.4,222.3 537.7,140.2 620,42.3"/>
-          <g style="fill:var(--hold);"><circle cx="44" cy="49.1" r="3"/><circle cx="126.3" cy="124" r="3"/><circle cx="208.6" cy="259" r="3"/></g>
-          <g style="fill:var(--check);"><circle cx="373.1" cy="255" r="3"/><circle cx="455.4" cy="222.3" r="3"/><circle cx="537.7" cy="140.2" r="3"/><circle cx="620" cy="42.3" r="3"/></g>
-          <circle cx="290.9" cy="304" r="4.5" style="fill:var(--surface);stroke:var(--link);stroke-width:2;"/>
+          <polyline fill="none" style="stroke:var(--hold);stroke-width:2;stroke-linejoin:round;" points="44,64.1 126.3,136.1 208.6,228.5 290.9,293.6 373.1,304 455.4,304 537.7,304 620,304"/>
+          <polyline fill="none" style="stroke:var(--check);stroke-width:2;stroke-linejoin:round;stroke-dasharray:6 4;" points="44,304 126.3,304 208.6,304 290.9,301.4 373.1,278.4 455.4,242.4 537.7,175.6 620,88"/>
+          <g style="fill:var(--hold);"><circle cx="44" cy="64.1" r="3"/><circle cx="126.3" cy="136.1" r="3"/><circle cx="208.6" cy="228.5" r="3"/><circle cx="290.9" cy="293.6" r="3"/></g>
+          <g style="fill:var(--check);"><circle cx="290.9" cy="301.4" r="3"/><circle cx="373.1" cy="278.4" r="3"/><circle cx="455.4" cy="242.4" r="3"/><circle cx="537.7" cy="175.6" r="3"/><circle cx="620" cy="88" r="3"/></g>
+          <circle cx="290.9" cy="297.5" r="4.5" style="fill:var(--surface);stroke:var(--link);stroke-width:2;"/>
           <g style="fill:var(--faint);font-family:var(--mono);font-size:11px;" text-anchor="middle">
             <text x="44" y="322">0.30</text><text x="126.3" y="322">0.35</text><text x="208.6" y="322">0.40</text>
             <text x="290.9" y="322" style="fill:var(--link);font-weight:700;">0.45</text>
@@ -139,10 +140,10 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=agent-inbox"></script>
   <script>
     (function () {
-      var items = document.querySelectorAll(".side-item[data-view]");
+      var items = document.querySelectorAll("[data-view]");
       var views = { console: "view-console", kb: "view-kb", metrics: "view-metrics" };
       items.forEach(function (btn) {
         btn.addEventListener("click", function () {

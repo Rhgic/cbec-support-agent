@@ -3,6 +3,8 @@
 S1 阶段只定义了健康检查相关结构；后续阶段的工单 / 审核 / 知识库 schema
 会在此追加，保持请求校验与响应序列化集中在一处。
 """
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -71,6 +73,9 @@ class ReviewCreate(BaseModel):
     action: str  # approved / edited / rejected
     final_reply: str | None = None
     failure_tags: list[str] | None = None
+    corrected_lang: Literal["en", "es", "id"] | None = None
+    corrected_intent: Literal["logistics", "return", "product", "other"] | None = None
+    corrected_risk_level: Literal["low", "mid", "high"] | None = None
 
 
 class ReviewOut(BaseModel):

@@ -1,9 +1,9 @@
 # datasets/ 说明
 
-> ⚠️ 本目录下所有 jsonl 都是**结构完整、内容为少量种子**的模板。
-> 种子只够让脚本跑通、验证格式；**面试要用的数字必须建立在你自己扩充的足量数据上。**
-> 种子样本是合成的——面试若被问「你的测试集怎么设计的」，答案要是「我扩充并核对过的」，
-> 不能是「AI 给的 13 条」。每个文件先扩到 ≥50 条、覆盖真实表达后再跑。
+> ⚠️ 本目录数据均为**合成评测样本**，不是线上真实工单。
+> 2026-07-26 已扩为：160 条三语种工单（60 条带可查种子订单号）、100 条风险标注、
+> 112 条有答案检索查询、84 条对抗查询，并通过 `scripts/expand_eval_datasets.py`
+> 做 schema、数量、重复与业务约束校验。面试必须明确说明合成数据边界；接入真实工单后仍须重跑。
 
 ## 文件与用途
 
@@ -27,7 +27,7 @@
   `{lang, draft_reply, intent, intent_confidence, short_circuited, tool_errors, gold_risk}`
   `gold_risk ∈ {low, mid, high}`。
 
-## 跑法（需先起 Postgres+pgvector、下 BGE-m3、灌库）
+## 跑法（需先起 PostgreSQL、下载 BGE-m3，并把向量灌入 Milvus）
 
 ```bash
 # 1. 建库（--all 按子目录逐类，套用正确 category）

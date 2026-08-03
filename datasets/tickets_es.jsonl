@@ -31,3 +31,23 @@
 {"lang": "es", "text": "no vuelvo a comprar aqui", "gold_lang": "es", "gold_intent": "other"}
 {"lang": "es", "text": "tienen un numero de telefono", "gold_lang": "es", "gold_intent": "other"}
 {"lang": "es", "text": "quiero hablar con una persona real", "gold_lang": "es", "gold_intent": "other"}
+{"lang": "es", "text": "¿Puedes revisar dónde está ahora el pedido CBEC202400000?", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "El seguimiento de CBEC202400001 no cambia desde el lunes.", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "CBEC202400002 figura como entregado, pero no recibí nada.", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "¿Cuándo debería llegarme el pedido CBEC202400003?", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "Revisa si CBEC202400004 ya pasó la aduana, por favor.", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "Necesito el estado de envío más reciente de CBEC202400005.", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "¿El pedido CBEC202400006 ya salió del almacén?", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "El paquete de CBEC202400007 parece detenido en tránsito.", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "¿Dónde está CBEC202400008? Lo necesito antes del fin de semana.", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "Consulta la última actualización del transportista para CBEC202400009.", "gold_lang": "es", "gold_intent": "logistics"}
+{"lang": "es", "text": "Necesito devolver el artículo del pedido CBEC202400010.", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "CBEC202400011 llegó dañado; ¿qué opciones de devolución tengo?", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "¿Puedo cambiar el producto de CBEC202400001 por otra talla?", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "Recibí otro artículo en CBEC202400002 y quiero devolverlo.", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "Comprueba si CBEC202400003 sigue dentro del plazo de devolución.", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "Quiero que revisen un reembolso por el defecto de CBEC202400004.", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "¿Cómo devuelvo el artículo sin abrir de CBEC202400005?", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "El producto de CBEC202400006 dejó de funcionar; ¿se puede cambiar?", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "Inicia una evaluación de devolución para CBEC202400007.", "gold_lang": "es", "gold_intent": "return"}
+{"lang": "es", "text": "CBEC202400008 llegó roto y necesito ayuda para devolverlo.", "gold_lang": "es", "gold_intent": "return"}

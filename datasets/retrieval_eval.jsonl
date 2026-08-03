@@ -20,3 +20,93 @@
 {"lang": "es", "query": "es resistente al agua", "category": "product", "expected_source": "file://waterproof_sizing.md"}
 {"lang": "id", "query": "apakah ini tahan air", "category": "product", "expected_source": "file://waterproof_sizing.md"}
 {"lang": "en", "query": "what size should i pick between m and l", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "en", "query": "What delivery time does the carrier promise?", "category": "logistics", "expected_source": "file://carrier_sla.md"}
+{"lang": "en", "query": "How long is the courier SLA?", "category": "logistics", "expected_source": "file://carrier_sla.md"}
+{"lang": "es", "query": "¿Cuál es el plazo del transportista?", "category": "logistics", "expected_source": "file://carrier_sla.md"}
+{"lang": "es", "query": "¿Qué tiempo de entrega maneja el courier?", "category": "logistics", "expected_source": "file://carrier_sla.md"}
+{"lang": "id", "query": "Berapa SLA waktu kirim kurir?", "category": "logistics", "expected_source": "file://carrier_sla.md"}
+{"lang": "id", "query": "Berapa lama standar layanan ekspedisi?", "category": "logistics", "expected_source": "file://carrier_sla.md"}
+{"lang": "en", "query": "Who pays import duties?", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "en", "query": "What happens while a parcel clears customs?", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "es", "query": "¿Quién paga los aranceles de importación?", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "es", "query": "¿Qué pasa durante el despacho de aduana?", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "id", "query": "Siapa yang membayar bea impor?", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "id", "query": "Apa yang terjadi saat paket diperiksa bea cukai?", "category": "logistics", "expected_source": "file://customs_clearance.md"}
+{"lang": "en", "query": "Tracking has stopped updating.", "category": "logistics", "expected_source": "file://logistics_faq.md"}
+{"lang": "en", "query": "It says delivered but my parcel is missing.", "category": "logistics", "expected_source": "file://logistics_faq.md"}
+{"lang": "es", "query": "El seguimiento dejó de actualizarse.", "category": "logistics", "expected_source": "file://logistics_faq.md"}
+{"lang": "es", "query": "Dice entregado pero falta el paquete.", "category": "logistics", "expected_source": "file://logistics_faq.md"}
+{"lang": "id", "query": "Nomor resi berhenti diperbarui.", "category": "logistics", "expected_source": "file://logistics_faq.md"}
+{"lang": "id", "query": "Status diterima tetapi paket tidak ada.", "category": "logistics", "expected_source": "file://logistics_faq.md"}
+{"lang": "en", "query": "Can I collect the parcel myself?", "category": "logistics", "expected_source": "file://self_pickup.md"}
+{"lang": "en", "query": "Where is the self-pickup point?", "category": "logistics", "expected_source": "file://self_pickup.md"}
+{"lang": "es", "query": "¿Puedo recoger el paquete personalmente?", "category": "logistics", "expected_source": "file://self_pickup.md"}
+{"lang": "es", "query": "¿Dónde está el punto de recogida?", "category": "logistics", "expected_source": "file://self_pickup.md"}
+{"lang": "id", "query": "Apakah paket bisa saya ambil sendiri?", "category": "logistics", "expected_source": "file://self_pickup.md"}
+{"lang": "id", "query": "Di mana lokasi pengambilan mandiri?", "category": "logistics", "expected_source": "file://self_pickup.md"}
+{"lang": "en", "query": "How long does international shipping take?", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "en", "query": "What is the usual cross-border delivery time?", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "es", "query": "¿Cuánto tarda un envío internacional?", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "es", "query": "¿Cuál es el plazo normal de entrega transfronteriza?", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "id", "query": "Berapa lama pengiriman internasional?", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "id", "query": "Berapa waktu normal pengiriman lintas negara?", "category": "logistics", "expected_source": "file://shipping_time.md"}
+{"lang": "en", "query": "My item arrived broken.", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "en", "query": "What should I do about a lost parcel?", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "es", "query": "Mi artículo llegó roto.", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "es", "query": "¿Qué hago si se perdió el paquete?", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "id", "query": "Barang saya tiba dalam keadaan rusak.", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "id", "query": "Apa yang harus dilakukan jika paket hilang?", "category": "return", "expected_source": "file://damaged_lost.md"}
+{"lang": "en", "query": "How long until a refund is credited?", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "en", "query": "When will the refund reach my card?", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "es", "query": "¿Cuánto tarda en acreditarse un reembolso?", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "es", "query": "¿Cuándo llegará el reembolso a mi tarjeta?", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "id", "query": "Berapa lama dana refund masuk?", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "id", "query": "Kapan pengembalian dana masuk ke kartu?", "category": "return", "expected_source": "file://refund_timeline.md"}
+{"lang": "en", "query": "How many days do I have to return an item?", "category": "return", "expected_source": "file://return_policy.md"}
+{"lang": "en", "query": "What items qualify for return?", "category": "return", "expected_source": "file://return_policy.md"}
+{"lang": "es", "query": "¿Cuántos días tengo para devolver un artículo?", "category": "return", "expected_source": "file://return_policy.md"}
+{"lang": "es", "query": "¿Qué productos se pueden devolver?", "category": "return", "expected_source": "file://return_policy.md"}
+{"lang": "id", "query": "Berapa hari batas waktu retur?", "category": "return", "expected_source": "file://return_policy.md"}
+{"lang": "id", "query": "Barang apa saja yang memenuhi syarat retur?", "category": "return", "expected_source": "file://return_policy.md"}
+{"lang": "en", "query": "Who pays return postage?", "category": "return", "expected_source": "file://return_shipping.md"}
+{"lang": "en", "query": "How do I get a return shipping label?", "category": "return", "expected_source": "file://return_shipping.md"}
+{"lang": "es", "query": "¿Quién paga el envío de devolución?", "category": "return", "expected_source": "file://return_shipping.md"}
+{"lang": "es", "query": "¿Cómo obtengo una etiqueta de devolución?", "category": "return", "expected_source": "file://return_shipping.md"}
+{"lang": "id", "query": "Siapa yang menanggung ongkir retur?", "category": "return", "expected_source": "file://return_shipping.md"}
+{"lang": "id", "query": "Bagaimana mendapatkan label pengiriman retur?", "category": "return", "expected_source": "file://return_shipping.md"}
+{"lang": "en", "query": "What does the product warranty cover?", "category": "return", "expected_source": "file://warranty.md"}
+{"lang": "en", "query": "How long is the warranty period?", "category": "return", "expected_source": "file://warranty.md"}
+{"lang": "es", "query": "¿Qué cubre la garantía del producto?", "category": "return", "expected_source": "file://warranty.md"}
+{"lang": "es", "query": "¿Cuánto dura el periodo de garantía?", "category": "return", "expected_source": "file://warranty.md"}
+{"lang": "id", "query": "Apa saja yang ditanggung garansi produk?", "category": "return", "expected_source": "file://warranty.md"}
+{"lang": "id", "query": "Berapa lama masa garansi?", "category": "return", "expected_source": "file://warranty.md"}
+{"lang": "en", "query": "Which accessories come in the box?", "category": "product", "expected_source": "file://accessories.md"}
+{"lang": "en", "query": "Can I buy a replacement cable?", "category": "product", "expected_source": "file://accessories.md"}
+{"lang": "es", "query": "¿Qué accesorios vienen en la caja?", "category": "product", "expected_source": "file://accessories.md"}
+{"lang": "es", "query": "¿Puedo comprar un cable de repuesto?", "category": "product", "expected_source": "file://accessories.md"}
+{"lang": "id", "query": "Aksesori apa yang ada di dalam kotak?", "category": "product", "expected_source": "file://accessories.md"}
+{"lang": "id", "query": "Apakah kabel pengganti bisa dibeli?", "category": "product", "expected_source": "file://accessories.md"}
+{"lang": "en", "query": "How long does the battery last?", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "en", "query": "How much time is needed for a full charge?", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "es", "query": "¿Cuánto dura la batería?", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "es", "query": "¿Cuánto tarda una carga completa?", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "id", "query": "Berapa lama daya tahan baterai?", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "id", "query": "Berapa waktu yang dibutuhkan untuk mengisi penuh?", "category": "product", "expected_source": "file://battery_power.md"}
+{"lang": "en", "query": "How should I clean the product?", "category": "product", "expected_source": "file://care_usage.md"}
+{"lang": "en", "query": "What is the safe way to store this item?", "category": "product", "expected_source": "file://care_usage.md"}
+{"lang": "es", "query": "¿Cómo debo limpiar el producto?", "category": "product", "expected_source": "file://care_usage.md"}
+{"lang": "es", "query": "¿Cómo se debe guardar el artículo?", "category": "product", "expected_source": "file://care_usage.md"}
+{"lang": "id", "query": "Bagaimana cara membersihkan produk?", "category": "product", "expected_source": "file://care_usage.md"}
+{"lang": "id", "query": "Bagaimana cara menyimpan barang dengan aman?", "category": "product", "expected_source": "file://care_usage.md"}
+{"lang": "en", "query": "Is the device compatible with my phone?", "category": "product", "expected_source": "file://product_faq.md"}
+{"lang": "en", "query": "How do I reset the product?", "category": "product", "expected_source": "file://product_faq.md"}
+{"lang": "es", "query": "¿El dispositivo es compatible con mi teléfono?", "category": "product", "expected_source": "file://product_faq.md"}
+{"lang": "es", "query": "¿Cómo reinicio el producto?", "category": "product", "expected_source": "file://product_faq.md"}
+{"lang": "id", "query": "Apakah perangkat kompatibel dengan ponsel saya?", "category": "product", "expected_source": "file://product_faq.md"}
+{"lang": "id", "query": "Bagaimana cara mereset produk?", "category": "product", "expected_source": "file://product_faq.md"}
+{"lang": "en", "query": "Is this item waterproof?", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "en", "query": "How do I choose the correct size?", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "es", "query": "¿Este artículo es impermeable?", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "es", "query": "¿Cómo elijo la talla correcta?", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "id", "query": "Apakah barang ini tahan air?", "category": "product", "expected_source": "file://waterproof_sizing.md"}
+{"lang": "id", "query": "Bagaimana memilih ukuran yang tepat?", "category": "product", "expected_source": "file://waterproof_sizing.md"}
