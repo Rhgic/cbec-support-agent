@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>查验台 · 跨境客服 Agent</title>
+<style>
+:root{
+  /* 查验台：冷白台面 + 三种官印色。刻意避开米黄/衬线/赤陶那套默认组合。 */
+  --bench:#E8EDEB;      /* 台面 */
+  --paper:#FFFFFF;      /* 单据 */
+  --ink:#0F1619;        /* 墨 */
+  --muted:#64737B;      /* 次级信息 */
+  --rule:#CBD5D2;       /* 界线 */
+  --rule-soft:#E2E8E6;
+  --clear:#0E5B52;      /* 放行 */
+  --hold:#9E2A1B;       /* 扣留 */
+  --review:#856212;     /* 查验 */
+
+  --sans:"PingFang SC","Hiragino Sans GB",-apple-system,"Helvetica Neue",sans-serif;
+  /* 宋体＝中文公文的字体。判定与章节标题用它，取其"裁定"的语气，且用得克制。 */
+  --song:"Songti SC","Song ti SC","SimSun","STSong",serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bench);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 72px}
+
+/* ── 抬头：像报关单表头，全部机器数据用等宽 ───────────────── */
+.masthead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.mark{font-family:var(--song);font-size:19px;letter-spacing:.14em}
+/* 这是静态设计稿，页面数据为示例，不是真实捕获的工单——明示，免得日后被当成实测结果。 */
+.draft-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--hold);
+  border:1px solid var(--hold);padding:1px 5px;align-self:center;white-space:nowrap}
+.masthead .sep{width:1px;height:15px;background:var(--rule);align-self:center}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.meta b{color:var(--ink);font-weight:600}
+
+/* ── 六节点查验线 ────────────────────────────────────────── */
+.line{
+  border-top:1px solid var(--ink);
+  border-bottom:1px solid var(--rule);
+  display:grid;grid-template-columns:repeat(6,1fr);
+  background:var(--paper);
+}
+.stn{padding:9px 12px 10px;border-right:1px solid var(--rule-soft);position:relative}
+.stn:last-child{border-right:0}
+.stn .n{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.stn .nm{font-family:var(--mono);font-size:12.5px;margin-top:1px}
+.stn .ms{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px}
+/* 做出判定的那一站，用一道顶边标出——结构本身承载信息，不是装饰 */
+.stn.decided::before{content:"";position:absolute;top:-1px;left:0;right:0;height:3px;background:var(--hold)}
+.stn.decided .nm{color:var(--hold);font-weight:600}
+
+/* ── 主体：文书 + 边栏证据 ───────────────────────────────── */
+.sheet{display:grid;grid-template-columns:minmax(0,1fr) 322px;gap:0;background:var(--paper);
+  border-bottom:1px solid var(--rule);box-shadow:0 1px 0 rgba(15,22,25,.04)}
+.doc{padding:24px 26px 28px;min-width:0}
+.margin{border-left:1px solid var(--rule);padding:24px 20px 28px;background:#FBFCFC}
+
+.lbl{font-family:var(--song);font-size:12px;letter-spacing:.22em;color:var(--muted);
+  padding-bottom:6px;border-bottom:1px solid var(--rule-soft);margin-bottom:14px}
+
+.orig{font-size:15px;line-height:1.72}
+.gloss{margin-top:7px;font-size:12.5px;color:var(--muted);line-height:1.6}
+
+.draft{margin-top:26px}
+.body{font-size:15.5px;line-height:2.05}
+
+/* 逐句溯源：有据的句子挂一个实心序号；无据的挂空心号并留一道未闭合的下划线。 */
+/* display:inline 是关键——溯源标记必须嵌在连续散文里，
+   一旦按钮变成 inline-block，句子被切断，"这是一段回复"的前提就没了。 */
+.seg{display:inline;border-radius:2px;padding:0;cursor:pointer;background:none;border:0;
+  font:inherit;color:inherit;text-align:left;transition:background .12s}
+.seg:hover,.seg.on{background:#EAF1EF}
+.seg.bare{border-bottom:1.5px dashed var(--hold)}
+.seg.bare:hover,.seg.bare.on{background:#FBEDEB}
+.ref{font-family:var(--mono);font-size:10px;vertical-align:super;margin-left:2px;
+  color:var(--clear);font-weight:600}
+.seg.bare .ref{color:var(--hold)}
+.seg.plain .ref{color:var(--muted);font-weight:400}
+
+/* ── 边栏证据 ────────────────────────────────────────────── */
+/* 有据性的账要算平：每句都得有去处，这行是那笔账的合计。 */
+.tally{font-family:var(--mono);font-size:11px;color:var(--muted);margin:-6px 0 16px;padding-left:11px}
+.tally b{color:var(--clear);font-weight:600}
+.tally b.bad{color:var(--hold)}
+.ev{border-left:2px solid transparent;padding:0 0 0 11px;margin-bottom:16px;transition:border-color .12s}
+.ev.on{border-left-color:var(--clear)}
+.ev.miss.on{border-left-color:var(--hold)}
+.ev .src{font-family:var(--mono);font-size:11px;color:var(--clear);word-break:break-all}
+.ev.miss .src{color:var(--hold)}
+.ev .q{font-size:12.5px;color:#33454C;margin-top:4px;line-height:1.62}
+.ev .sc{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:4px}
+.ev.plain .src{color:var(--muted)}
+
+/* ── 判定 ───────────────────────────────────────────────── */
+.verdict{margin-top:26px;padding-top:18px;border-top:1px solid var(--rule)}
+.stampbar{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+/* 官印：双线框 + 宋体 + 极轻微旋转。克制，不做橡皮章纹理——避免落入 kitsch。 */
+.stamp{font-family:var(--song);font-size:22px;letter-spacing:.2em;color:var(--hold);
+  border:1.5px solid var(--hold);box-shadow:0 0 0 3px var(--paper),0 0 0 4.5px var(--hold);
+  padding:8px 16px 9px;transform:rotate(-1.4deg);white-space:nowrap;flex:none;margin:3px 4px 0 0}
+.why{flex:1;min-width:240px}
+.why li{font-size:13px;margin-bottom:5px;list-style:none;position:relative;padding-left:15px}
+.why li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:1px;background:var(--hold)}
+.why .rule{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+.acts{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap}
+.btn{font-family:var(--sans);font-size:13.5px;padding:9px 17px;border:1px solid var(--ink);
+  background:var(--paper);color:var(--ink);cursor:pointer;border-radius:2px}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.pri{background:var(--ink);color:var(--paper)}
+.btn.pri:hover{background:#000}
+
+.foot{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:14px;line-height:1.7}
+
+@media (max-width:860px){
+  .sheet{grid-template-columns:1fr}
+  .margin{border-left:0;border-top:1px solid var(--rule)}
+  .line{grid-template-columns:repeat(3,1fr)}
+  .stn{border-bottom:1px solid var(--rule-soft)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="mark">查验台</div>
+    <div class="draft-tag">设计稿 · 示例数据</div>
+    <div class="sep"></div>
+    <div class="meta">案卷 <b>#4818</b> · 语种 <b>es</b> · 意图 <b>return</b> · 受理 <b>14:02:31</b> · 检索分 <b>0.71</b></div>
+  </div>
+
+  <div class="line">
+    <div class="stn"><div class="n">01</div><div class="nm">mask</div><div class="ms">12ms</div></div>
+    <div class="stn"><div class="n">02</div><div class="nm">classify</div><div class="ms">0ms · rule</div></div>
+    <div class="stn"><div class="n">03</div><div class="nm">retrieve</div><div class="ms">892ms · 4 片段</div></div>
+    <div class="stn"><div class="n">04</div><div class="nm">tools</div><div class="ms">214ms</div></div>
+    <div class="stn"><div class="n">05</div><div class="nm">generate</div><div class="ms">8431ms</div></div>
+    <div class="stn decided"><div class="n">06</div><div class="nm">risk_gate</div><div class="ms">6ms · 扣留</div></div>
+  </div>
+
+  <div class="sheet">
+    <div class="doc">
+      <div class="lbl">客户原文</div>
+      <div class="orig">Quiero un reembolso por el artículo roto que recibí, ¿cuánto tardan?</div>
+      <div class="gloss">我收到的商品是破损的，想退款，需要多久？</div>
+
+      <div class="draft">
+        <div class="lbl">拟回复 · 逐句溯源</div>
+        <div class="body" id="body">
+          <button class="seg plain" data-ev="e0">Lamentamos el problema.<span class="ref">·</span></button>
+          <button class="seg" data-ev="e1">Según nuestra política, le haremos un reembolso<span class="ref">1</span></button>
+          <button class="seg bare" data-ev="e9">de&nbsp;$50<span class="ref">?</span></button>
+          <button class="seg" data-ev="e1">a su método de pago original en un plazo de 3 a 5 días hábiles una vez recibido el artículo devuelto.<span class="ref">1</span></button>
+        </div>
+      </div>
+
+      <div class="verdict">
+        <div class="lbl">判定</div>
+        <div class="stampbar">
+          <div class="stamp">扣　留</div>
+          <ul class="why">
+            <li>回复涉及金额／退款／赔偿，不得自动出站<div class="rule">规则 5 · 金额正则命中「$50」</div></li>
+            <li>金额「$50」未出现在本次检索的任何片段中<div class="rule">引用真实性校验 · 无据事实</div></li>
+          </ul>
+        </div>
+        <div class="acts">
+          <button class="btn pri">改数额后发送</button>
+          <button class="btn">编辑全文</button>
+          <button class="btn">退回重办</button>
+        </div>
+        <div class="foot">
+          出站前才还原 PII　·　模型全程未接触真实订单号<br>
+          该条已记入人工纠正集，用于回流修正 prompt 与知识库
+        </div>
+      </div>
+    </div>
+
+    <aside class="margin">
+      <div class="lbl">依据</div>
+      <div class="tally">4 句 · <b>2 句有据</b> · 1 句无需依据 · <b class="bad">1 句无据</b></div>
+
+      <div class="ev" id="e1">
+        <div class="src">kb/return_policy_es.md</div>
+        <div class="q">El reembolso se emite al método de pago original en un plazo de 3 a 5 días hábiles tras recibir el artículo devuelto.</div>
+        <div class="sc">相似度 0.71 · 已被引用</div>
+      </div>
+
+      <div class="ev plain" id="e2">
+        <div class="src">kb/damaged_goods_es.md</div>
+        <div class="q">Los artículos dañados en tránsito califican para reembolso completo o reenvío sin costo.</div>
+        <div class="sc">相似度 0.63 · 未被引用</div>
+      </div>
+
+      <div class="ev miss" id="e9">
+        <div class="src">无匹配片段</div>
+        <div class="q">金额「$50」在本次检索返回的 4 个片段中均未出现，也不在订单工具返回的字段里。模型自行填入。</div>
+        <div class="sc">这是本条被扣留的直接原因</div>
+      </div>
+
+      <div class="ev plain" id="e0">
+        <div class="src">礼节用语</div>
+        <div class="q">不含事实断言，无需依据。</div>
+        <div class="sc">不参与有据性判定</div>
+      </div>
+    </aside>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var segs = document.querySelectorAll('.seg');
+  function clear(){
+    document.querySelectorAll('.ev.on').forEach(function(n){n.classList.remove('on')});
+    document.querySelectorAll('.seg.on').forEach(function(n){n.classList.remove('on')});
+  }
+  function link(seg){
+    clear();
+    var ev = document.getElementById(seg.dataset.ev);
+    if(!ev) return;
+    ev.classList.add('on');
+    document.querySelectorAll('.seg[data-ev="'+seg.dataset.ev+'"]').forEach(function(s){s.classList.add('on')});
+  }
+  segs.forEach(function(s){
+    s.addEventListener('mouseenter', function(){link(s)});
+    s.addEventListener('focus', function(){link(s)});
+    s.addEventListener('click', function(){link(s)});
+  });
+  document.getElementById('body').addEventListener('mouseleave', clear);
+  // 默认把注意力放在被扣留的那一句上
+  var bare = document.querySelector('.seg.bare');
+  if(bare) link(bare);
+})();
+</script>
+</body>
+</html>
