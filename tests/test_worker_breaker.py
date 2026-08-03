@@ -37,6 +37,27 @@ def _patch_session(monkeypatch, ticket):
     return session
 
 
+class _NullSaver:
+    """PostgresSaver 桩：本套件不依赖真实数据库。
+
+    踩过的坑：放行分支里 worker 会先 `PostgresSaver.from_conn_string(...)` 连 PG，
+    再调 build_graph。本地开着 docker db 时连得上、测试通过，CI 里没有 Postgres
+    就在构图之前抛异常，断言到的是"没走到流水线"——同一条测试本地绿、CI 红。
+    整套测试的前提是无需外部依赖（同 conftest 的 FakeRedis），这里补齐这一环。
+    """
+
+    @staticmethod
+    def from_conn_string(_dsn):
+        class _Ctx:
+            def __enter__(self):
+                return SimpleNamespace(setup=lambda: None)
+
+            def __exit__(self, *_exc):
+                return False
+
+        return _Ctx()
+
+
 def test_breaker_open_skips_pipeline(monkeypatch):
     """熔断触发：流水线一次都不能被调用，工单落 deferred。"""
     ticket = SimpleNamespace(raw_text="where is my order", status="processing")
@@ -82,6 +103,7 @@ def test_breaker_read_failure_lets_ticket_through(monkeypatch):
     _patch_session(monkeypatch, ticket)
     # guardrails 的 _safe 包装在 Redis 异常时返回 True，这里直接模拟其结果
     monkeypatch.setattr(worker, "check_breaker", lambda: True)
+    monkeypatch.setattr(worker, "PostgresSaver", _NullSaver)
 
     reached = {"pipeline": False}
 
