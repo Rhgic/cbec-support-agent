@@ -5,6 +5,7 @@
 
 运行：arq app.tasks.worker.WorkerSettings
 """
+import logging
 import os
 
 # 必须在 torch / pymilvus 被导入前设置：worker 会 fork 子进程执行任务，
@@ -24,10 +25,11 @@ from app.graph.builder import build_graph
 from app.graph.state import TicketState
 from app.metrics.events import record_ticket_outcome
 from app.models import Ticket
-from app.services.guardrails import set_cache
+from app.services.guardrails import check_breaker, set_cache
 from app.services.ticket_outcome import apply_ticket_result
 
 settings = get_settings()
+log = logging.getLogger(__name__)
 
 
 def _libpq_dsn(url: str) -> str:
@@ -51,6 +53,31 @@ async def process_ticket(ctx, ticket_id: int) -> dict:
         raw = ticket.raw_text
     finally:
         db.close()
+
+    # 成本熔断：消费前再检查一次。
+    # 此前熔断只在 API 入口（routers/tickets.py）检查，队列里已入的任务不受保护——
+    # 熔断挡住新提交，积压的工单却会继续调 LLM 烧钱直到排空，等于前门上锁、后院敞开。
+    # 批量涌入时这个缺口最致命：160 条入队后再触发熔断，护栏一分钱也拦不住。
+    #
+    # 方向仍与风险闸门相反（规格 15）：熔断读取失败时 check_breaker 返回 True 放行，
+    # 护栏故障只该多花钱，不该把工单卡死。
+    #
+    # 刻意不自动重排队：熔断的含义是"今天预算花超了"，自动重试只是把钱花到明天。
+    # 是提额度还是让它等，该由人决定——所以落 deferred 交回人工，不假装还会自己跑完。
+    if not check_breaker():
+        db = SessionLocal()
+        try:
+            t = db.get(Ticket, ticket_id)
+            if t is not None:
+                t.status = "deferred"
+                db.commit()
+        finally:
+            db.close()
+        log.warning(
+            "成本熔断触发，工单未进入流水线",
+            extra={"ticket_id": ticket_id, "reason": "cost_breaker"},
+        )
+        return {"ticket_id": ticket_id, "deferred": "cost_breaker"}
 
     state: TicketState = {"ticket_id": ticket_id, "raw_text": raw}
 
