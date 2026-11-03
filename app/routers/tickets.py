@@ -1,12 +1,10 @@
 """工单路由：提交 / 查询 / trace（规格 9）。
 
-POST /tickets：护栏（熔断→503 / 限流→429 / 配额→429）→ 脱敏算缓存键 →
-  命中缓存直接返回（不计费），否则入队 arq 异步处理，返回 {ticket_id, task_id}
+POST /tickets：护栏（熔断→503 / 限流→429 / 配额→429）→ 脱敏 →
+  入队 arq 异步处理，返回 {ticket_id, task_id}
 GET  /tickets/{id}：状态与结果（含各节点耗时聚合展示所需字段）
 GET  /tickets/{id}/trace：agent_runs 全链路，供演示
 """
-import json
-
 from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import select
@@ -19,7 +17,6 @@ from app.services.guardrails import (
     check_breaker,
     check_quota,
     check_rate_limit,
-    get_cache,
 )
 from app.services.pii import mask_text
 
@@ -36,26 +33,6 @@ def require_token(authorization: str | None = Header(default=None)) -> str:
 
 def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
-
-
-def _apply_cached(ticket_id: int, data: dict) -> None:
-    db = SessionLocal()
-    try:
-        t = db.get(Ticket, ticket_id)
-        if t is None:
-            return
-        t.masked_text = t.masked_text
-        t.draft_reply = data.get("draft_reply")
-        t.citations = data.get("citations", [])
-        t.risk_level = data.get("risk_level")
-        t.action = data.get("action")
-        t.lang = data.get("lang")
-        t.intent = data.get("intent")
-        # 缓存结果视为已结算：按 action 落状态
-        t.status = "closed" if data.get("action") == "auto_send" else "awaiting_review"
-        db.commit()
-    finally:
-        db.close()
 
 
 @router.post("/tickets")
@@ -85,12 +62,6 @@ async def create_ticket(
         tid = ticket.id
     finally:
         db.close()
-
-    # 结果缓存命中：直接写回，不调 LLM、不入队、不计费
-    cached = get_cache(masked, payload.lang or "unknown")
-    if cached:
-        _apply_cached(tid, json.loads(cached))
-        return {"ticket_id": tid, "task_id": None, "cached": True}
 
     # 入队异步处理
     try:

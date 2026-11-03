@@ -172,9 +172,9 @@ def risk_gate(state: TicketState) -> dict:
         return _forced_high(["风险闸门异常，默认拦截"])
 
     d = res.data
-    lvl = d.get("level", "mid")
-    if lvl not in ACTION_MAP:
-        lvl = "mid"
+    lvl = d.get("level") if isinstance(d, dict) else None
+    if not isinstance(lvl, str) or lvl not in ACTION_MAP:
+        return _forced_high(["风险闸门返回无效等级，默认拦截"])
     return {
         "risk_level": lvl,
         "risk_reasons": d.get("reasons", []),

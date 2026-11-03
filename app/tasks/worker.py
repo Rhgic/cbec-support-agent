@@ -25,7 +25,7 @@ from app.graph.builder import build_graph
 from app.graph.state import TicketState
 from app.metrics.events import record_ticket_outcome
 from app.models import Ticket
-from app.services.guardrails import check_breaker, set_cache
+from app.services.guardrails import check_breaker
 from app.services.ticket_outcome import apply_ticket_result
 
 settings = get_settings()
@@ -104,29 +104,6 @@ async def process_ticket(ctx, ticket_id: int) -> dict:
         risk_level=result.get("risk_level", "high"),
     )
 
-    # 结果缓存：相同脱敏文本 + 语种下次直接返回，不计费。
-    # 注意：必须读 result（编排结果字典），不能读 ORM 对象 t——上面 db.close() 之后
-    # t 已 detached，访问其属性会触发 DetachedInstanceError（只在真跑 worker 时暴露）。
-    masked = result.get("masked_text")
-    draft = result.get("draft_reply")
-    if masked and draft:
-        import json
-
-        set_cache(
-            masked,
-            result.get("lang", "unknown"),
-            json.dumps(
-                {
-                    "draft_reply": draft,
-                    "citations": result.get("citations") or [],
-                    "risk_level": result.get("risk_level"),
-                    "action": result.get("action"),
-                    "lang": result.get("lang"),
-                    "intent": result.get("intent"),
-                },
-                ensure_ascii=False,
-            ),
-        )
     return result
 
 
