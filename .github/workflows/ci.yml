@@ -33,3 +33,42 @@ jobs:
 
       - name: pytest
         run: python -m pytest -q
+
+  integration:
+    name: PostgreSQL + Redis integration
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cbec_integration
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cbec_integration"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/cbec_integration
+      REDIS_URL: redis://localhost:6379/0
+      CBEC_INTEGRATION: "1"
+      APP_ENV: test
+      DEMO_TOKEN: dev-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install service test dependencies
+        run: >-
+          pip install pytest pytest-asyncio fastapi httpx pydantic-settings sqlalchemy alembic
+          "psycopg[binary]" pgvector cryptography redis arq langgraph
+          langgraph-checkpoint-postgres prometheus-client python-json-logger
+      - run: alembic upgrade head
+      - run: pytest -q tests/test_integration.py

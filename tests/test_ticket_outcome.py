@@ -26,7 +26,7 @@ def _ticket():
 @pytest.mark.parametrize(
     ("result", "expected"),
     [
-        ({"action": "auto_send", "risk_level": "low", "draft_reply": "ok"}, "closed"),
+        ({"action": "auto_send", "risk_level": "low", "draft_reply": "ok"}, "ready_to_send"),
         (
             {"action": "human_required", "risk_level": "mid", "draft_reply": "review"},
             "awaiting_review",

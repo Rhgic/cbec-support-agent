@@ -4,15 +4,16 @@
 召回极低，属已知短板（规格 15.1），绝不声称已覆盖。同值同占位符，映射加密后落
 pii_vault，仅在出站前一步还原——LLM 全程接触不到原文。
 
-加密说明（重要）：依赖清单（规格 2.2）不含 cryptography，故这里用 stdlib 派生的密钥
-做「XOR + HMAC」可逆变换，属于轻量混淆而非 AES 级加密。生产环境应改用 cryptography
-的 Fernet/AES-GCM，并补充该依赖。
+新写入使用带随机 nonce 的 AES-GCM；旧版 XOR+HMAC 仅保留只读兼容，便于迁移。
 """
+
 import base64
 import hashlib
 import hmac
+import os
 import re
 
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from sqlalchemy import select
 
 from app.config import get_settings
@@ -47,12 +48,18 @@ def _xor(data: bytes, key: bytes) -> bytes:
 
 
 def _encrypt(plain: str) -> str:
-    body = _xor(plain.encode("utf-8"), _key())
-    sig = hmac.new(_key(), body, hashlib.sha256).digest()
-    return base64.b64encode(sig + body).decode("ascii")
+    nonce = os.urandom(12)
+    encrypted = AESGCM(_key()).encrypt(nonce, plain.encode("utf-8"), b"cbec-pii-v1")
+    return "v1:" + base64.b64encode(nonce + encrypted).decode("ascii")
 
 
 def _decrypt(token: str) -> str:
+    if token.startswith("v1:"):
+        try:
+            blob = base64.b64decode(token[3:], validate=True)
+            return AESGCM(_key()).decrypt(blob[:12], blob[12:], b"cbec-pii-v1").decode("utf-8")
+        except Exception as exc:
+            raise ValueError("PII 完整性校验失败") from exc
     blob = base64.b64decode(token)
     sig, body = blob[:32], blob[32:]
     expected = hmac.new(_key(), body, hashlib.sha256).digest()
@@ -102,7 +109,7 @@ def store_mapping(ticket_id: int, placeholders: dict[str, str]) -> None:
     db = SessionLocal()
     try:
         for original, placeholder in placeholders.items():
-            db.add(
+            db.merge(
                 PiiVault(
                     ticket_id=ticket_id,
                     placeholder=placeholder,
@@ -119,9 +126,7 @@ def load_mapping(ticket_id: int) -> dict[str, str]:
     db = SessionLocal()
     try:
         rows = db.execute(
-            select(PiiVault.placeholder, PiiVault.original).where(
-                PiiVault.ticket_id == ticket_id
-            )
+            select(PiiVault.placeholder, PiiVault.original).where(PiiVault.ticket_id == ticket_id)
         ).fetchall()
         return {ph: _decrypt(enc) for ph, enc in rows}
     finally:

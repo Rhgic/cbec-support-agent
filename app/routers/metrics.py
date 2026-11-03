@@ -5,21 +5,16 @@
 datasets/adversarial.jsonl 评测（见 locust / eval 说明），不在本接口内——它们依赖
 人工标注集，不是运行中聚合量。
 """
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 
+from app.auth import require_token
 from app.config import get_settings
 from app.database import SessionLocal
 from app.models import AgentRun, Ticket
 
 settings = get_settings()
 router = APIRouter(tags=["metrics"])
-
-
-def require_token(authorization: str | None = Header(default=None)) -> str:
-    if authorization != f"Bearer {settings.demo_token}":
-        raise HTTPException(status_code=401, detail="无效或缺失 token")
-    return settings.demo_token
 
 
 @router.get("/metrics/summary")

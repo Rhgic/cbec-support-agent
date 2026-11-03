@@ -144,7 +144,7 @@ def _forced_high(reasons: list[str]) -> dict:
     return {"risk_level": "high", "risk_reasons": reasons, "action": "human_required"}
 
 
-def risk_gate(state: TicketState) -> dict:
+def _risk_gate(state: TicketState) -> dict:
     # 上游已强制 high（如生成失败）→ 直接拦截，不再二次判定
     if state.get("risk_level") == "high":
         return _forced_high(state.get("risk_reasons", []) + ["上游已强制 high"])
@@ -180,3 +180,11 @@ def risk_gate(state: TicketState) -> dict:
         "risk_reasons": d.get("reasons", []),
         "action": ACTION_MAP[lvl],
     }
+
+
+def risk_gate(state: TicketState) -> dict:
+    """Any unexpected risk evaluation failure must require human review."""
+    try:
+        return _risk_gate(state)
+    except Exception:
+        return _forced_high(["风险闸门执行异常，默认拦截"])

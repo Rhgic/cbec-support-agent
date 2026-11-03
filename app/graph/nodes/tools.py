@@ -10,6 +10,7 @@
 工具需要真实单号：PII 还原只在「出站前」做，但工具是后端（非 LLM），可经 pii_vault
 取回真实值。这里只把真实单号用于查询，绝不回传给 LLM。
 """
+
 import re
 
 from app.graph.state import TicketState
@@ -19,7 +20,7 @@ from app.tools.return_policy import evaluate
 from app.tools.tracking import detect_exception, get_track_info, register
 
 # 订单/运单号形态：字母开头 + 至少含一位数字 + 字母数字，长度 6~22
-#（匹配 SF1234567890、CBEC20240001；真实种子格式为 CBEC2024NNNNN）
+# （匹配 SF1234567890、CBEC20240001；真实种子格式为 CBEC2024NNNNN）
 #
 # 「必须含数字」这个条件不能去掉：原实现是 `[A-Za-z][A-Za-z0-9]{5,21}`，
 # 会把**任何 6 字母以上的普通单词**当成订单号——实测 57 条 logistics/return 工单里
@@ -92,11 +93,9 @@ def _needs_order_facts(text: str) -> bool:
 
 def _order_dict(order) -> dict:
     return {
-        "order_no": order.order_no,
         "market": order.market,
         "product_name": order.product_name,
         "status": order.status,
-        "tracking_no": order.tracking_no,
         "delivered_at": order.delivered_at.isoformat() if order.delivered_at else None,
     }
 
@@ -104,7 +103,7 @@ def _order_dict(order) -> dict:
 def _restore(state: TicketState) -> str:
     # 后端取回真实单号用于工具查询（LLM 全程看不到）
     ph = load_mapping(state["ticket_id"])
-    return restore_text(state.get("masked_text", ""), ph)
+    return restore_text(state.get("masked_text", ""), {raw: placeholder for placeholder, raw in ph.items()})
 
 
 def _extract_order_no(text: str) -> str | None:

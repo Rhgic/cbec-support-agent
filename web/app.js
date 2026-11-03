@@ -20,7 +20,7 @@ const LANG_CN = { en: "英语", es: "西语", id: "印尼语" };
 const SAMPLES = {
   logi: {
     ticket: {
-      ticket_id: 4817, status: "closed", lang: "en", intent: "logistics",
+      ticket_id: 4817, status: "ready_to_send", lang: "en", intent: "logistics",
       intent_confidence: 0.91, intent_method: "rule", retrieval_score: 0.78, short_circuited: false,
       draft_reply: "Your parcel (SF1234567890) cleared the transit hub and is at the customs step. Cross-border delivery usually lands in 7–15 business days; you're on day 6, so it's on track. If tracking stalls past 5 days we'll open a carrier trace for you.",
       citations: ["file://logistics_faq.md"], risk_level: "low", action: "auto_send",
@@ -112,7 +112,7 @@ function renderList() {
         `<div class="tk-top"><span class="tk-id">#${t.ticket_id}</span>` +
         `<span class="tk-meta">${t.intent} · ${t.lang}</span></div>` +
         `<div class="tk-preview">${esc(t.customer_message || "当前工单未返回客户消息")}</div>` +
-        `<div class="tk-state ${t.status === "awaiting_review" ? "todo" : ""}">${t.status === "awaiting_review" ? "需要你审核" : "已处理，无需操作"}</div>` +
+        `<div class="tk-state ${t.status === "awaiting_review" ? "todo" : ""}">${esc(statusLabel(t.status))}</div>` +
       `</div>` +
       `<span class="badge ${t.risk_level}">${t.risk_level}</span>`;
     row.onclick = () => selectTicket(t.ticket_id);
@@ -156,12 +156,17 @@ function renderDetail(sample) {
   });
 }
 
+function statusLabel(status) {
+  return ({ processing: "处理中", retrying: "重试中", awaiting_review: "待审核", ready_to_send: "待发送",
+    sent: "已发送", closed: "历史已关闭", failed: "处理失败", refused: "需人工接手", deferred: "预算不足，已延期" })[status] || status || "未知状态";
+}
+
 function detailHead(t) {
-  const status = t.status === "awaiting_review" ? "待处理" : "已完成";
+  const status = statusLabel(t.status);
   return `<div class="detail-head">` +
     `<div><div class="detail-kicker">当前工单</div><span class="d-id">#${t.ticket_id}</span></div>` +
     `<span class="badge ${t.risk_level}">${t.risk_level === "high" ? "需审核" : "已处理"}</span>` +
-    `<span class="d-status">${status}</span>` +
+    `<span class="d-status">${esc(status)}</span>` +
   `</div>`;
 }
 
@@ -209,10 +214,10 @@ function channelHtml(t) {
     : "事实性、有依据、无承诺 —— 可安全自动发送。";
   const actions = t.status === "awaiting_review" && t.draft_reply
     ? `<div class="decision-actions">` +
-        `<button class="btn btn-pass" data-review="approved">确认并发送</button>` +
+        `<button class="btn btn-pass" data-review="approved">确认待发送</button>` +
         `<button class="btn btn-ghost" data-review="edited">修改回复</button>` +
         `<button class="text-action" data-review="rejected">退回重办</button>` +
-        `<div class="review-help">先核对退款金额与到账时效；确认无误后点击“确认并发送”。</div>` +
+        `<div class="review-help">先核对退款金额与到账时效；确认无误后点击“确认待发送”。</div>` +
       `</div>`
     : "";
   return `<div class="channel ${lvl}">` +
@@ -404,19 +409,19 @@ async function createTicket(text, lang = null) {
   return r.json();
 }
 async function getTicket(id) {
-  const r = await fetch(`${API.base}/tickets/${id}`);
+  const r = await fetch(`${API.base}/tickets/${id}`, { headers: authh() });
   if (!r.ok) throw new Error(`GET /tickets/${id} → ${r.status}`);
   return r.json();
 }
 async function getTrace(id) {
-  const r = await fetch(`${API.base}/tickets/${id}/trace`);
+  const r = await fetch(`${API.base}/tickets/${id}/trace`, { headers: authh() });
   if (!r.ok) throw new Error(`GET trace → ${r.status}`);
   return r.json();
 }
 async function pollTicket(id, tries = 40) {
   for (let i = 0; i < tries; i++) {
     const t = await getTicket(id);
-    if (t.status !== "processing") return t;
+    if (!["processing", "retrying"].includes(t.status)) return t;
     await new Promise((r) => setTimeout(r, 500));
   }
   throw new Error("等待处理超时");
@@ -425,14 +430,14 @@ async function pollTicket(id, tries = 40) {
 async function submitReview(action, ticket) {
   let finalReply = null;
   if (action === "edited") {
-    finalReply = window.prompt("修改草稿后发送（仅演示，不会外发）：", ticket.draft_reply || "");
+    finalReply = window.prompt("修改待发送回复：", ticket.draft_reply || "");
     if (finalReply === null) return;
   }
   try {
     let updated;
     if (USE_MOCK) {
       updated = structuredClone(ticket);
-      updated.status = action === "rejected" ? "failed" : "closed";
+      updated.status = action === "rejected" ? "failed" : "ready_to_send";
       if (finalReply) updated.draft_reply = finalReply;
     } else {
       const r = await fetch(`${API.base}/review/${ticket.ticket_id}`, {

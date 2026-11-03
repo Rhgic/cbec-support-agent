@@ -5,10 +5,12 @@ POST /tickets：护栏（熔断→503 / 限流→429 / 配额→429）→ 脱敏
 GET  /tickets/{id}：状态与结果（含各节点耗时聚合展示所需字段）
 GET  /tickets/{id}/trace：agent_runs 全链路，供演示
 """
-from arq.connections import RedisSettings
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from sqlalchemy import select
 
+from arq.connections import RedisSettings
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select, text
+
+from app.auth import require_token
 from app.config import get_settings
 from app.database import SessionLocal
 from app.models import AgentRun, Ticket
@@ -22,13 +24,6 @@ from app.services.pii import mask_text
 
 settings = get_settings()
 router = APIRouter(tags=["tickets"])
-
-
-def require_token(authorization: str | None = Header(default=None)) -> str:
-    # 演示端固定 token（规格 1.2 不做注册登录体系）
-    if authorization != f"Bearer {settings.demo_token}":
-        raise HTTPException(status_code=401, detail="无效或缺失 token")
-    return settings.demo_token
 
 
 def _client_ip(request: Request) -> str:
@@ -68,8 +63,13 @@ async def create_ticket(
         from arq import create_pool
 
         redis = await create_pool(RedisSettings.from_dsn(settings.redis_url))
-        job = await redis.enqueue_job("process_ticket", tid)
-        task_id = job.job_id if job else None
+        try:
+            job = await redis.enqueue_job("process_ticket", tid, _job_id=f"ticket:{tid}")
+            if job is None:
+                raise RuntimeError("任务未入队")
+            task_id = job.job_id
+        finally:
+            await redis.aclose()
     except Exception:
         # 队列不可用：无法异步处理，标记 failed（护栏降级放行指限流/配额，队列故障则失败）
         db = SessionLocal()
@@ -86,7 +86,7 @@ async def create_ticket(
 
 
 @router.get("/tickets/{ticket_id}", response_model=TicketOut)
-def get_ticket(ticket_id: int):
+def get_ticket(ticket_id: int, token: str = Depends(require_token)):
     db = SessionLocal()
     try:
         t = db.get(Ticket, ticket_id)
@@ -111,18 +111,10 @@ def get_ticket(ticket_id: int):
 
 
 @router.get("/tickets/{ticket_id}/trace", response_model=TicketTrace)
-def get_trace(ticket_id: int):
+def get_trace(ticket_id: int, token: str = Depends(require_token)):
     db = SessionLocal()
     try:
-        rows = (
-            db.execute(
-                select(AgentRun)
-                .where(AgentRun.ticket_id == ticket_id)
-                .order_by(AgentRun.id)
-            )
-            .scalars()
-            .all()
-        )
+        rows = db.execute(select(AgentRun).where(AgentRun.ticket_id == ticket_id).order_by(AgentRun.id)).scalars().all()
         return TicketTrace(
             ticket_id=ticket_id,
             runs=[
@@ -140,3 +132,53 @@ def get_trace(ticket_id: int):
         )
     finally:
         db.close()
+
+
+@router.post("/tickets/{ticket_id}/retry")
+async def retry_ticket(ticket_id: int, token: str = Depends(require_token)):
+    from uuid import uuid4
+
+    from arq import create_pool
+
+    db = SessionLocal()
+    redis = None
+    try:
+        ticket = db.execute(select(Ticket).where(Ticket.id == ticket_id).with_for_update()).scalar_one_or_none()
+        if ticket is None:
+            raise HTTPException(status_code=404, detail="工单不存在")
+        if ticket.status not in {"failed", "deferred"}:
+            raise HTTPException(status_code=409, detail="仅失败或延期工单可重试")
+        locked = db.execute(text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": ticket_id}).scalar()
+        if not locked:
+            raise HTTPException(status_code=409, detail="工单仍在执行，请稍后重试")
+        # Manual retry deliberately starts a fresh graph; automatic retries resume checkpoints.
+        import asyncio
+
+        def clear_checkpoint():
+            from langgraph.checkpoint.postgres import PostgresSaver
+
+            from app.tasks.worker import _libpq_dsn
+
+            with PostgresSaver.from_conn_string(_libpq_dsn(settings.database_url)) as saver:
+                saver.setup()
+                saver.delete_thread(str(ticket_id))
+
+        await asyncio.to_thread(clear_checkpoint)
+        ticket.status = "processing"
+        db.commit()
+        redis = await create_pool(RedisSettings.from_dsn(settings.redis_url))
+        job = await redis.enqueue_job("process_ticket", ticket_id, _job_id=f"retry:{ticket_id}:{uuid4().hex}")
+        if job is None:
+            raise RuntimeError("任务未入队")
+        ticket.status = "processing"
+        db.commit()
+        return {"ticket_id": ticket_id, "task_id": job.job_id}
+    except HTTPException:
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=503, detail="任务重试失败") from None
+    finally:
+        db.close()
+        if redis is not None:
+            await redis.aclose()

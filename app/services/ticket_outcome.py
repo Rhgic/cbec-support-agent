@@ -59,7 +59,7 @@ def apply_ticket_result(db: Session, ticket_id: int, result: Mapping[str, Any]) 
         else:
             ticket.status = "failed"
     elif ticket.action == "auto_send":
-        # 本系统只起草，不实际发送；自动出站结果以 closed 表示流程完成。
-        ticket.status = "closed"
+        # 本系统只起草，不实际发送；等待真实渠道确认后才能标记 sent。
+        ticket.status = "ready_to_send"
     else:
         ticket.status = "awaiting_review"

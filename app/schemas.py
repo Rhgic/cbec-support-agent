@@ -3,9 +3,10 @@
 S1 阶段只定义了健康检查相关结构；后续阶段的工单 / 审核 / 知识库 schema
 会在此追加，保持请求校验与响应序列化集中在一处。
 """
+
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class DependencyStatus(BaseModel):
@@ -26,8 +27,15 @@ class HealthResponse(BaseModel):
 class TicketCreate(BaseModel):
     """提交工单请求。lang 可省略，由分类节点自动识别。"""
 
-    text: str
-    lang: str | None = None
+    text: str = Field(min_length=1, max_length=20000)
+    lang: Literal["en", "es", "id"] | None = None
+
+    @field_validator("text")
+    @classmethod
+    def nonempty_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("工单内容不能为空")
+        return value
 
 
 class AgentRunOut(BaseModel):
@@ -70,12 +78,22 @@ class TicketTrace(BaseModel):
 class ReviewCreate(BaseModel):
     """审核动作。"""
 
-    action: str  # approved / edited / rejected
+    action: Literal["approved", "edited", "rejected"]
     final_reply: str | None = None
     failure_tags: list[str] | None = None
     corrected_lang: Literal["en", "es", "id"] | None = None
     corrected_intent: Literal["logistics", "return", "product", "other"] | None = None
     corrected_risk_level: Literal["low", "mid", "high"] | None = None
+
+    @model_validator(mode="after")
+    def validate_reply(self):
+        if self.action == "edited":
+            if not self.final_reply or not self.final_reply.strip():
+                raise ValueError("修改通过必须提供非空回复")
+            self.final_reply = self.final_reply.strip()
+        elif self.final_reply is not None:
+            raise ValueError("仅修改通过可提供 final_reply")
+        return self
 
 
 class ReviewOut(BaseModel):

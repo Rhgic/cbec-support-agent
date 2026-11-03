@@ -6,6 +6,7 @@
 """
 import json
 from dataclasses import dataclass
+from functools import lru_cache
 
 from app.config import get_settings
 from app.services.guardrails import add_cost
@@ -25,11 +26,12 @@ class LlmResult:
     error: str | None = None
 
 
+@lru_cache
 def _client():
     # 延迟导入：仅在实际调用时 import openai
     from openai import OpenAI
 
-    return OpenAI(api_key=settings.deepseek_api_key, base_url=settings.deepseek_base_url)
+    return OpenAI(api_key=settings.deepseek_api_key, base_url=settings.deepseek_base_url, timeout=30.0, max_retries=0)
 
 
 def chat_json(system_prompt: str, user_prompt: str, max_retries: int = 1) -> LlmResult:
@@ -51,6 +53,8 @@ def chat_json(system_prompt: str, user_prompt: str, max_retries: int = 1) -> Llm
             )
             text = resp.choices[0].message.content or "{}"
             data = json.loads(text)
+            if not isinstance(data, dict):
+                raise ValueError("LLM response must be a JSON object")
             ti = resp.usage.prompt_tokens
             to = resp.usage.completion_tokens
             cost = ti / 1000 * _PRICE["in"] + to / 1000 * _PRICE["out"]

@@ -7,9 +7,10 @@ POST /knowledge/build：触发 build_knowledge（插入 docs + chunks，embeddin
 为什么 build 与 embed 分离：build 纯 DB 写、可随时跑；embed 需加载模型、耗资源，
 且依赖模型权重，故拆到 CLI 脚本，不在请求路径内同步执行。
 """
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 
+from app.auth import require_token
 from app.config import get_settings
 from app.database import SessionLocal
 from app.models import KnowledgeChunk
@@ -17,12 +18,6 @@ from scripts.build_knowledge import build
 
 settings = get_settings()
 router = APIRouter(tags=["knowledge"])
-
-
-def require_token(authorization: str | None = Header(default=None)) -> str:
-    if authorization != f"Bearer {settings.demo_token}":
-        raise HTTPException(status_code=401, detail="无效或缺失 token")
-    return settings.demo_token
 
 
 @router.get("/knowledge/chunks")

@@ -28,11 +28,12 @@ from collections import defaultdict
 from collections.abc import AsyncIterator
 from pathlib import Path
 
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from app.auth import require_token
 from app.config import get_settings
 from app.database import SessionLocal
 from app.graph.nodes.classify import classify
@@ -266,7 +267,7 @@ async def events(token: str = Query(default="")):
 
 
 @app.get("/tickets/{ticket_id}")
-def get_ticket(ticket_id: int):
+def get_ticket(ticket_id: int, token: str = Depends(require_token)):
     r = RESULTS.get(ticket_id)
     if not r:
         raise HTTPException(status_code=404, detail="工单不存在")
@@ -274,7 +275,7 @@ def get_ticket(ticket_id: int):
 
 
 @app.get("/tickets/{ticket_id}/trace")
-def get_trace(ticket_id: int):
+def get_trace(ticket_id: int, token: str = Depends(require_token)):
     r = RESULTS.get(ticket_id)
     if not r:
         raise HTTPException(status_code=404, detail="工单不存在")
@@ -298,7 +299,11 @@ def review_ticket(ticket_id: int, payload: ReviewIn, authorization: str | None =
     if not result:
         raise HTTPException(status_code=404, detail="工单不存在")
     ticket = result["ticket"]
-    ticket["status"] = "failed" if payload.action == "rejected" else "closed"
+    if ticket.get("status") != "awaiting_review":
+        raise HTTPException(status_code=409, detail="工单不处于可审核状态")
+    if payload.action == "edited" and not (payload.final_reply or "").strip():
+        raise HTTPException(status_code=422, detail="修改通过必须提供非空回复")
+    ticket["status"] = "failed" if payload.action == "rejected" else "ready_to_send"
     if payload.action == "edited" and payload.final_reply:
         ticket["draft_reply"] = payload.final_reply
     return ticket

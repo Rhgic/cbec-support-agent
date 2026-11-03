@@ -32,7 +32,7 @@ def _format_tools(tool_results: dict) -> str:
         return ""
     parts = []
     if order := tool_results.get("order"):
-        parts.append(f"订单状态: {order.get('status')}; 物流单号: {order.get('tracking_no')}")
+        parts.append(f"订单状态: {order.get('status')}")
     if tp := tool_results.get("return_policy"):
         parts.append(f"退货政策: {tp.get('reason')}")
     if tr := tool_results.get("tracking"):

@@ -16,7 +16,7 @@ class Chunk(TypedDict):
 class TicketState(TypedDict):
     # 输入
     ticket_id: int
-    raw_text: str
+    raw_text: NotRequired[str]  # compatibility for direct/demo invocation; workers load from DB in mask
     # 当前用户此前的脱敏会话摘要；仅在实时接入场景由接入层填充。
     conversation_context: NotRequired[str]
 
