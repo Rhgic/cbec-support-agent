@@ -178,7 +178,7 @@ function detailHead(t) {
   const status = statusLabel(t.status);
   return `<div class="detail-head">` +
     `<div><div class="detail-kicker">当前工单</div><span class="d-id">#${t.ticket_id}</span></div>` +
-    `<span class="badge ${t.risk_level}">${t.risk_level === "high" ? "需审核" : "已处理"}</span>` +
+    `<span class="badge ${t.risk_level}">${({high:"高风险",mid:"中风险",low:"低风险"})[t.risk_level] || "风险待评估"}</span>` +
     `<span class="d-status">${esc(status)}</span>` +
   `</div>`;
 }
@@ -222,9 +222,9 @@ function channelHtml(t) {
   const v = VERDICT[lvl];
   const why = lvl === "high" && t.short_circuited
     ? "没有可依据的答案 —— 检索分数低于阈值，Agent 不会猜。"
-    : lvl === "high" ? "回复涉及金额或承诺 —— 需人工确认后才能发出。"
+    : lvl === "high" ? "此工单需要人工核对，请结合客户消息与依据判断。"
     : lvl === "mid" ? "风险不高，但发送前值得看一眼。"
-    : "事实性、有依据、无承诺 —— 可安全自动发送。";
+    : "回复草稿已生成，请确认后续发送状态。";
   const actions = t.status === "awaiting_review" && t.draft_reply
     ? `<div class="decision-actions">` +
         `<button class="btn btn-pass" data-review="approved">确认待发送</button>` +
@@ -258,7 +258,7 @@ function workHtml(t) {
   } else {
     draft =
       `<div class="draft held"><header><span class="label">未生成草稿</span></header>` +
-      `<div class="r-none">Agent 在写回复前就停下了 —— 检索没有找到可依据的内容，于是把工单转给人工，而不是编造。</div></div>`;
+      `<div class="r-none">${t.status === "processing" || t.status === "retrying" ? "工单正在处理中，请稍后刷新。" : t.short_circuited ? "没有找到足够依据，请人工接手。" : t.status === "failed" ? "处理未完成，可尝试重新处理工单。" : t.status === "deferred" ? "工单因预算限制延期，请检查预算后重试。" : "当前没有可展示的回复，请查看工单状态。"}</div></div>`;
   }
 
   // 依据来源：无引用是警告态，不是中性信息
