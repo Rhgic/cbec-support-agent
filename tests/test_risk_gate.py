@@ -8,6 +8,8 @@
 
 作者自写部分（规格 14：evaluate_risk_rules）已实现，以下为完整单测。
 """
+import pytest
+
 from app.graph.nodes import risk_gate
 from app.services.llm import LlmResult
 
@@ -103,16 +105,18 @@ def test_llm_error_forced_high(monkeypatch):
     assert out["action"] == "human_required"
 
 
-def test_unknown_level_clamped_to_mid(monkeypatch):
+@pytest.mark.parametrize("data", [{"level": "bogus"}, {}, {"level": None}, {"level": []}])
+def test_invalid_level_forced_high(monkeypatch, data):
     monkeypatch.setattr(risk_gate, "evaluate_risk_rules", lambda s: None)
     monkeypatch.setattr(risk_gate, "risk_prompt", lambda reply: {"system": "", "user": ""})
     monkeypatch.setattr(
         risk_gate,
         "chat_json",
-        lambda *a, **k: LlmResult(data={"level": "bogus", "reasons": []}, token_in=1, token_out=1, cost_usd=0.0),
+        lambda *a, **k: LlmResult(data=data, token_in=1, token_out=1, cost_usd=0.0),
     )
     out = risk_gate.risk_gate({"draft_reply": "x"})
-    assert out["risk_level"] == "mid"
+    assert out["risk_level"] == "high"
+    assert out["action"] == "human_required"
 
 
 def test_rule_layer_contract():

@@ -8,7 +8,6 @@
   熔断触发   → 不进流水线、不花钱、落 deferred（不是 failed，工单没出错）
   熔断读取失败 → 放行（护栏故障只该多花钱，不该把工单卡死；方向与风险闸门刻意相反）
 """
-import asyncio
 from types import SimpleNamespace
 
 from app.tasks import worker
@@ -70,7 +69,7 @@ def test_breaker_open_skips_pipeline(monkeypatch):
 
     monkeypatch.setattr(worker, "build_graph", _boom)
 
-    out = asyncio.run(worker.process_ticket({}, 42))
+    out = worker._process_ticket({}, 42)
 
     assert out["deferred"] == "cost_breaker"
     assert ticket.status == "deferred"
@@ -87,7 +86,7 @@ def test_breaker_open_does_not_mark_failed(monkeypatch):
     monkeypatch.setattr(worker, "check_breaker", lambda: False)
     monkeypatch.setattr(worker, "build_graph", lambda: None)
 
-    asyncio.run(worker.process_ticket({}, 7))
+    worker._process_ticket({}, 7)
 
     assert ticket.status == "deferred"
     assert ticket.status != "failed"
@@ -114,7 +113,7 @@ def test_breaker_read_failure_lets_ticket_through(monkeypatch):
     monkeypatch.setattr(worker, "build_graph", _fake_build_graph)
 
     try:
-        asyncio.run(worker.process_ticket({}, 9))
+        worker._process_ticket({}, 9)
     except Exception:  # noqa: BLE001 — 只关心是否走到了流水线
         pass
 

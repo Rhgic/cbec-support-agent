@@ -21,9 +21,24 @@ def test_rate_limit_allows_under_threshold(fake_redis):
 def test_rate_limit_blocks_over_threshold(fake_redis):
     ip = "9.9.9.9"
     # 把当前分钟计数预置到阈值临界，下一次即超限
-    key = f"rl:{ip}:{guardrails._today()}-{datetime.now().minute}"
+    key = f"rl:{ip}:{datetime.now():%Y-%m-%d-%H-%M}"
     fake_redis.data[key] = guardrails.settings.rate_limit_per_minute
     assert guardrails.check_rate_limit(ip) is False
+
+
+def test_rate_limit_separates_hours(fake_redis, monkeypatch):
+    class Clock(datetime):
+        hour_value = 10
+
+        @classmethod
+        def now(cls):
+            return cls(2026, 1, 1, cls.hour_value, 5)
+
+    monkeypatch.setattr(guardrails, "datetime", Clock)
+    fake_redis.data["rl:client:2026-01-01-10-05"] = guardrails.settings.rate_limit_per_minute
+    assert not guardrails.check_rate_limit("client")
+    Clock.hour_value = 11
+    assert guardrails.check_rate_limit("client")
 
 
 def test_quota_allows(fake_redis):

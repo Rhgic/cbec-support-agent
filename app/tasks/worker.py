@@ -5,8 +5,14 @@
 
 运行：arq app.tasks.worker.WorkerSettings
 """
+
+import asyncio
 import logging
 import os
+from datetime import UTC, datetime, timedelta
+
+from arq import Retry, cron
+from sqlalchemy import select, text
 
 # 必须在 torch / pymilvus 被导入前设置：worker 会 fork 子进程执行任务，
 # HF tokenizer 的并行线程 + Milvus 的 gRPC 事件循环在 fork 后会导致段错误/进程静默退出
@@ -25,7 +31,7 @@ from app.graph.builder import build_graph
 from app.graph.state import TicketState
 from app.metrics.events import record_ticket_outcome
 from app.models import Ticket
-from app.services.guardrails import check_breaker, set_cache
+from app.services.guardrails import check_breaker
 from app.services.ticket_outcome import apply_ticket_result
 
 settings = get_settings()
@@ -43,14 +49,22 @@ def _libpq_dsn(url: str) -> str:
     )
 
 
-async def process_ticket(ctx, ticket_id: int) -> dict:
+def _resume_graph(graph, state, config):
+    snapshot = graph.get_state(config)
+    if snapshot.values and not snapshot.next:
+        return snapshot.values
+    return graph.invoke(None if snapshot.values else state, config=config)
+
+
+def _process_ticket(ctx, ticket_id: int) -> dict:
     """执行一条工单的整条 LangGraph 流水线，并把结果写回 tickets 表。"""
     db = SessionLocal()
     try:
         ticket = db.get(Ticket, ticket_id)
         if ticket is None:
             return {"error": "ticket not found"}
-        raw = ticket.raw_text
+        if ticket.status not in {"processing", "retrying"}:
+            return {"ticket_id": ticket_id, "skipped": ticket.status}
     finally:
         db.close()
 
@@ -79,15 +93,14 @@ async def process_ticket(ctx, ticket_id: int) -> dict:
         )
         return {"ticket_id": ticket_id, "deferred": "cost_breaker"}
 
-    state: TicketState = {"ticket_id": ticket_id, "raw_text": raw}
+    state: TicketState = {"ticket_id": ticket_id}
 
     # checkpointer 连接生命周期限定在本次 invoke，避免连接泄漏
     with PostgresSaver.from_conn_string(_libpq_dsn(settings.database_url)) as checkpointer:
         checkpointer.setup()
         graph = build_graph().compile(checkpointer=checkpointer)
-        result = graph.invoke(
-            state, config={"configurable": {"thread_id": str(ticket_id)}}
-        )
+        config = {"configurable": {"thread_id": str(ticket_id)}}
+        result = _resume_graph(graph, state, config)
 
     # 把编排结果持久化到 tickets 表
     db = SessionLocal()
@@ -104,30 +117,53 @@ async def process_ticket(ctx, ticket_id: int) -> dict:
         risk_level=result.get("risk_level", "high"),
     )
 
-    # 结果缓存：相同脱敏文本 + 语种下次直接返回，不计费。
-    # 注意：必须读 result（编排结果字典），不能读 ORM 对象 t——上面 db.close() 之后
-    # t 已 detached，访问其属性会触发 DetachedInstanceError（只在真跑 worker 时暴露）。
-    masked = result.get("masked_text")
-    draft = result.get("draft_reply")
-    if masked and draft:
-        import json
-
-        set_cache(
-            masked,
-            result.get("lang", "unknown"),
-            json.dumps(
-                {
-                    "draft_reply": draft,
-                    "citations": result.get("citations") or [],
-                    "risk_level": result.get("risk_level"),
-                    "action": result.get("action"),
-                    "lang": result.get("lang"),
-                    "intent": result.get("intent"),
-                },
-                ensure_ascii=False,
-            ),
-        )
     return result
+
+
+def _locked_process(ctx, ticket_id: int) -> dict:
+    # A transaction advisory lock prevents duplicate queue jobs processing the same ticket.
+    with SessionLocal() as lock_db:
+        acquired = lock_db.execute(text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": ticket_id}).scalar()
+        if not acquired:
+            return {"ticket_id": ticket_id, "skipped": "already_running"}
+        try:
+            return _process_ticket(ctx, ticket_id)
+        except Exception:
+            with SessionLocal() as db:
+                ticket = db.get(Ticket, ticket_id)
+                if ticket and ticket.status in {"processing", "retrying"}:
+                    ticket.status = "failed" if ctx.get("job_try", 1) >= 2 else "retrying"
+                    db.commit()
+            raise
+
+
+async def process_ticket(ctx, ticket_id: int) -> dict:
+    # Blocking graph/DB/model calls must not block the arq event loop.
+    try:
+        return await asyncio.to_thread(_locked_process, ctx, ticket_id)
+    except Exception:
+        if ctx.get("job_try", 1) < 2:
+            raise Retry(defer=5) from None
+        raise
+
+
+async def recover_stale_tickets(ctx):
+    """Recover crashes between the DB commit and enqueue, or lost queue jobs."""
+
+    def stale_ids():
+        cutoff = datetime.now(UTC) - timedelta(minutes=20)
+        with SessionLocal() as db:
+            return list(
+                db.scalars(
+                    select(Ticket.id)
+                    .where(Ticket.status.in_(["processing", "retrying"]), Ticket.updated_at < cutoff)
+                    .order_by(Ticket.id)
+                    .limit(100)
+                )
+            )
+
+    for tid in await asyncio.to_thread(stale_ids):
+        await ctx["redis"].enqueue_job("process_ticket", tid, _job_id=f"recover:{tid}")
 
 
 class WorkerSettings:
@@ -136,3 +172,6 @@ class WorkerSettings:
     # 失败最多重试 1 次（max_tries=2 = 首次 + 1 次重试）；重试耗尽标记 failed。
     # 不重复计费：checkpointer 会从已成功的节点续跑，已执行的 LLM 节点不重复调用（规格第 5 节）。
     functions = [func(process_ticket, max_tries=2)]
+    job_timeout = 900
+    max_jobs = 1  # bound CPU/model memory per worker; scale with worker processes
+    cron_jobs = [cron(recover_stale_tickets, minute={0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55})]

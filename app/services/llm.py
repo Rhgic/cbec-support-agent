@@ -4,16 +4,19 @@
 一处，业务节点禁止直接 import openai。openai SDK 延迟导入，避免无密钥环境导入即报错。
 作者自写的 prompt 模板见文件末尾（规格 14），仅签名 + docstring。
 """
+
 import json
 from dataclasses import dataclass
+from functools import lru_cache
 
 from app.config import get_settings
 from app.services.guardrails import add_cost
+from app.services.llm_usage import add_usage
 
 settings = get_settings()
 
-# deepseek-chat 公开价（美元 / 1K tokens），仅作成本估算；生产应随模型版本核对
-_PRICE = {"in": 0.00027, "out": 0.0011}
+# 配置中的美元 / 1K token 估算价；更换模型时须同步配置。
+_PRICE = {"in": settings.llm_input_cost_per_1k, "out": settings.llm_output_cost_per_1k}
 
 
 @dataclass
@@ -25,11 +28,12 @@ class LlmResult:
     error: str | None = None
 
 
+@lru_cache
 def _client():
     # 延迟导入：仅在实际调用时 import openai
     from openai import OpenAI
 
-    return OpenAI(api_key=settings.deepseek_api_key, base_url=settings.deepseek_base_url)
+    return OpenAI(api_key=settings.deepseek_api_key, base_url=settings.deepseek_base_url, timeout=30.0, max_retries=0)
 
 
 def chat_json(system_prompt: str, user_prompt: str, max_retries: int = 1) -> LlmResult:
@@ -49,12 +53,18 @@ def chat_json(system_prompt: str, user_prompt: str, max_retries: int = 1) -> Llm
                 response_format={"type": "json_object"},
                 temperature=0,
             )
-            text = resp.choices[0].message.content or "{}"
-            data = json.loads(text)
             ti = resp.usage.prompt_tokens
             to = resp.usage.completion_tokens
             cost = ti / 1000 * _PRICE["in"] + to / 1000 * _PRICE["out"]
-            add_cost(cost)  # 累计成本，驱动全局熔断
+            add_cost(cost)
+            add_usage(ti, to, cost)
+            from app.metrics.events import COST_TOTAL
+
+            COST_TOTAL.inc(cost)
+            text = resp.choices[0].message.content or "{}"
+            data = json.loads(text)
+            if not isinstance(data, dict):
+                raise ValueError("LLM response must be a JSON object")
             return LlmResult(data=data, token_in=ti, token_out=to, cost_usd=cost)
         except Exception as e:  # noqa: BLE001 — 需捕获一切 LLM 异常以兜底
             last_err = str(e)
@@ -159,11 +169,11 @@ def generate_prompt(
             "If the knowledge base covers the question, reference it by including "
             'source URLs in the "citations" list. '
             "If no information is available, politely explain that the team will follow up.\n\n"
-            'Output a single JSON object with exactly these fields:\n'
+            "Output a single JSON object with exactly these fields:\n"
             '- "reply": the full reply text in the target language\n'
             '- "citations": list of source URLs from the knowledge base (empty if none)\n\n'
             '- "support": a list of evidence objects. Each object has "source_url" and "quote". '
-            'The quote MUST be copied verbatim from the matching knowledge-base chunk. '
+            "The quote MUST be copied verbatim from the matching knowledge-base chunk. "
             'For tool evidence use source_url "tool://results" and copy the exact tool-result text.\n\n'
             "CRITICAL RULES:\n"
             "- Placeholder tokens like [EMAIL_1], [PHONE_2], [CARD_1], [TRACKING_1], "
@@ -178,8 +188,8 @@ def generate_prompt(
             "Output only the JSON object, no explanation."
         ),
         "user": f"Recent masked conversation history:\n{conversation_context or '(none)'}\n\n"
-                f"Current customer message:\n{customer_text}\n\n{context}\n\n"
-                "Answer the customer's message above, grounded in the knowledge base and tool results.",
+        f"Current customer message:\n{customer_text}\n\n{context}\n\n"
+        "Answer the customer's message above, grounded in the knowledge base and tool results.",
     }
 
 
@@ -198,7 +208,7 @@ def risk_prompt(reply: str) -> dict:
         "system": (
             "You are a risk assessor for e-commerce customer service replies. "
             "Evaluate the draft reply and assign a risk level.\n\n"
-            'Output a single JSON object with these fields:\n'
+            "Output a single JSON object with these fields:\n"
             '- "level": one of "low" or "mid"\n'
             '- "reasons": list of strings explaining the decision\n\n'
             "Criteria:\n"
@@ -207,7 +217,7 @@ def risk_prompt(reply: str) -> dict:
             '- "mid": Reply that could benefit from human review — ambiguous language, '
             "apology without clear action, partial information, or multi-step process involved. "
             "Should go to quick review (human one-click approve).\n\n"
-            "Note: NEVER output \"high\". High-risk replies are detected by deterministic rules "
+            'Note: NEVER output "high". High-risk replies are detected by deterministic rules '
             "before reaching this assessment.\n"
             "Output only the JSON object, no explanation."
         ),

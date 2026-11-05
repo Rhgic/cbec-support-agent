@@ -12,8 +12,8 @@
 
   <header class="topbar">
     <div class="brand-lines">
-      <h1>跨境客服收件箱</h1>
-      <div class="sub">平台消息实时进入，AI 在右侧给出可执行建议</div>
+      <h1>言盾 <span class="brand-divider">/</span> 客服工作台</h1>
+      <div class="sub">清晰处理每一条客户消息</div>
     </div>
     <div class="spacer"></div>
     <nav class="view-switcher" aria-label="页面导航">
@@ -25,21 +25,44 @@
   </header>
 
   <div id="view-console" class="view">
-  <section class="flow-guide" aria-label="操作说明">
-    <div class="flow-guide-inner">
-      <span class="guide-title">工作流</span>
-      <div class="guide-step"><b>1</b><span>从左侧打开客户会话</span></div>
-      <div class="guide-step"><b>2</b><span>中间查看原始消息和译文</span></div>
-      <div class="guide-step"><b>3</b><span>右侧采纳、修改或退回 AI 建议</span></div>
-    </div>
-  </section>
   <main class="shell">
     <aside class="rail">
       <section class="card">
-        <header><h2>会话收件箱</h2><span class="count" id="tk-count"></span></header>
+        <header><div><h2>收件箱</h2><p class="queue-caption">客户会话与处理进度</p></div><span class="count" id="tk-count"></span></header>
+        <div class="queue-toolbar">
+          <label for="status-filter">工单状态</label>
+          <select id="status-filter">
+            <option value="">全部</option><option value="awaiting_review">待审核</option>
+            <option value="failed">处理失败</option><option value="deferred">预算延期</option>
+            <option value="ready_to_send">待发送</option><option value="processing">处理中</option>
+            <option value="retrying">重试中</option><option value="refused">需人工接手</option>
+          </select>
+          <button id="refresh-tickets" class="text-action" type="button">刷新</button>
+        </div>
+        <div id="queue-message" role="status" aria-live="polite"></div>
         <div class="tickets" id="tickets"></div>
+        <button id="load-more" class="text-action queue-more" type="button" hidden>加载更多</button>
       </section>
 
+      <details class="try-agent">
+        <summary>连接后台服务</summary>
+        <form id="connect-api" class="try-agent-body">
+          <label for="api-base">API 地址</label><input id="api-base" type="url" placeholder="http://localhost:8000" required />
+          <label for="api-token">访问令牌</label><input id="api-token" type="password" autocomplete="off" required />
+          <button class="btn btn-primary" type="submit">连接</button>
+          <small>令牌仅保留在当前页面内存，刷新后需重新输入。</small>
+        </form>
+      </details>
+      <details class="try-agent">
+        <summary>Amazon 订单核查</summary>
+        <form id="amazon-lookup" class="try-agent-body">
+          <label for="amazon-order-id">Amazon 订单号</label>
+          <input id="amazon-order-id" placeholder="123-1234567-1234567" pattern="[0-9]{3}-[0-9]{7}-[0-9]{7}" required />
+          <button class="btn btn-primary" type="submit">查询履约状态</button>
+          <button id="amazon-actions" class="text-action" type="button">查询可用消息类型</button>
+          <div id="amazon-result" role="status">配置卖家授权后可查询；订单核查不代表已验证客户身份。</div>
+        </form>
+      </details>
       <details class="try-agent">
         <summary>模拟接收一条平台消息</summary>
         <div class="try-agent-body">
@@ -97,7 +120,12 @@
 
   <div id="view-metrics" class="view" hidden>
     <div class="view-wrap">
-      <div class="view-head"><h2>指标</h2><p>合成扩样集上的实测结果（160 条多语种工单 / 112 有答案查询 / 84 对抗查询 / 100 条风险标注）。接入真实工单后需重跑复核。</p></div>
+      <section class="card ops-panel" aria-labelledby="ops-title">
+        <h2 id="ops-title">运行状态</h2>
+        <button id="refresh-operations" class="text-action" type="button">刷新运行指标</button>
+        <div id="operations" role="status">样例模式不显示实时运行指标。</div>
+      </section>
+      <div class="view-head"><h2>历史合成评测</h2><p>合成扩样集上的实测结果（160 条多语种工单 / 112 有答案查询 / 84 对抗查询 / 100 条风险标注）。接入真实工单后需重跑复核。</p></div>
       <div class="metrics-grid">
         <div class="mcard"><div class="mv">35%</div><div class="mk">自动解决率 · 56/160</div></div>
         <div class="mcard"><div class="mv">100%</div><div class="mk">高风险拦截召回</div></div>

@@ -37,7 +37,7 @@ def check_rate_limit(ip: str) -> bool:
 
 
 def _rate_ok(ip: str) -> bool:
-    key = f"rl:{ip}:{_today()}-{datetime.now().minute}"
+    key = f"rl:{ip}:{datetime.now():%Y-%m-%d-%H-%M}"
     pipe = app.deps.redis_client.pipeline()
     pipe.incr(key)
     pipe.expire(key, 60)

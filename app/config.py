@@ -3,9 +3,11 @@
 为什么集中在这里：所有模块都从 get_settings() 取配置，避免在代码里散落
 硬编码的连接串 / 密钥 / 阈值。env.py、guardrails、llm 封装都复用同一份。
 """
-from functools import lru_cache
 
-from pydantic import Field
+from functools import lru_cache
+from typing import Literal
+
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +28,19 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com/v1"
     deepseek_model: str = "deepseek-v4-flash"  # deepseek-chat 已下线（真跑 400 报错发现）
+
+    # 费用为可配置估算价，不等于供应商实际账单。
+    llm_input_cost_per_1k: float = Field(default=0.00027, ge=0)
+    llm_output_cost_per_1k: float = Field(default=0.0011, ge=0)
+
+    # Amazon adapter: opt-in, sandbox by default, operator read access only.
+    amazon_enabled: bool = False
+    amazon_sandbox: bool = True
+    amazon_region: Literal["na", "eu", "fe"] = "na"
+    amazon_marketplace_id: str = ""
+    amazon_client_id: SecretStr = SecretStr("")
+    amazon_client_secret: SecretStr = SecretStr("")
+    amazon_refresh_token: SecretStr = SecretStr("")
 
     # ===== 17TRACK =====
     tracking_api_key: str = ""
@@ -48,7 +63,7 @@ class Settings(BaseSettings):
     # ===== 重排 rerank（P1：两阶段检索 = 向量粗筛 → 交叉编码精排）=====
     rerank_enabled: bool = True
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
-    recall_k: int = 20   # 向量召回候选数；rerank 后取 DEFAULT_K
+    recall_k: int = 20  # 向量召回候选数；rerank 后取 DEFAULT_K
 
     # ===== 护栏阈值（第 8 节）=====
     rate_limit_per_minute: int = 20
@@ -61,9 +76,17 @@ class Settings(BaseSettings):
     # 演示端固定 token，规格 1.2 明确不做注册登录
     demo_token: str = "dev-token"
 
-    # ===== PII 加密（stdlib-only 约束，见 app/services/pii.py 说明）=====
-    # 依赖清单不含 cryptography，故用 stdlib 派生的密钥做可逆变换；生产应换 AES-GCM
+    # ===== PII AES-GCM 加密，生产必须提供高熵独立密钥 =====
     pii_secret: str = "change-me-in-prod"
+
+    @model_validator(mode="after")
+    def production_secrets(self):
+        if self.app_env.lower() in {"prod", "production"}:
+            if self.demo_token == "dev-token" or len(self.demo_token) < 32:
+                raise ValueError("生产环境必须配置至少 32 字符的 DEMO_TOKEN")
+            if self.pii_secret == "change-me-in-prod" or len(self.pii_secret) < 32:
+                raise ValueError("生产环境必须配置至少 32 字符的 PII_SECRET")
+        return self
 
 
 @lru_cache
