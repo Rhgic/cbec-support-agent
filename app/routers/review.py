@@ -89,3 +89,26 @@ def review(ticket_id: int, payload: ReviewCreate, token: str = Depends(require_t
         return {"ticket_id": ticket_id, "status": t.status}
     finally:
         db.close()
+
+
+@router.get("/review/{ticket_id}/history")
+def review_history(ticket_id: int, token: str = Depends(require_token), after_id: int = Query(0, ge=0)):
+    with SessionLocal() as db:
+        if db.get(Ticket, ticket_id) is None:
+            raise HTTPException(status_code=404, detail="工单不存在")
+        rows = db.scalars(
+            select(Review).where(Review.ticket_id == ticket_id, Review.id > after_id).order_by(Review.id).limit(51)
+        ).all()
+        return {
+            "items": [
+                {
+                    "id": v.id,
+                    "action": v.reviewer_action,
+                    "draft_reply": v.draft_reply,
+                    "final_reply": v.final_reply,
+                    "created_at": v.created_at,
+                }
+                for v in rows[:50]
+            ],
+            "next_cursor": rows[49].id if len(rows) > 50 else None,
+        }

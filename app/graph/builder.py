@@ -9,6 +9,7 @@ checkpointer：使用 LangGraph 的 PostgresSaver（后端为 PostgreSQL，与�
 后从最后成功节点恢复，配合 arq 不重复计费。checkpointer 的连接生命周期由 worker 管理
 （见 tasks/worker.py 的 `with PostgresSaver.from_conn_string(...)`）。
 """
+
 from langgraph.graph import END, StateGraph
 
 from app.graph.nodes.classify import classify
@@ -54,24 +55,35 @@ def _traced(name: str, fn):
 
     from app.database import SessionLocal
     from app.metrics.events import record_agent_run
+    from app.services.llm_usage import Usage, current_usage
 
     def wrapper(state):
         t0 = time.perf_counter()
         err = None
+        usage = Usage()
+        usage_token = current_usage.set(usage)
         try:
             return fn(state)
         except Exception as e:  # noqa: BLE001 — 记录后原样抛出
             err = str(e)[:500]
             raise
         finally:
+            current_usage.reset(usage_token)
             latency_ms = int((time.perf_counter() - t0) * 1000)
             tid = state.get("ticket_id")
             if tid:
                 db = SessionLocal()
                 try:
                     record_agent_run(
-                        db, ticket_id=tid, node=name,
-                        latency_ms=latency_ms, ok=err is None, error=err,
+                        db,
+                        ticket_id=tid,
+                        node=name,
+                        latency_ms=latency_ms,
+                        ok=err is None,
+                        error=err,
+                        token_in=usage.token_in,
+                        token_out=usage.token_out,
+                        cost_usd=usage.cost_usd,
                     )
                     db.commit()
                 except Exception:  # noqa: BLE001 — 埋点失败不能影响主链路

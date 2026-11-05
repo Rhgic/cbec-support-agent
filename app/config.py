@@ -5,8 +5,9 @@
 """
 
 from functools import lru_cache
+from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +28,19 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com/v1"
     deepseek_model: str = "deepseek-v4-flash"  # deepseek-chat 已下线（真跑 400 报错发现）
+
+    # 费用为可配置估算价，不等于供应商实际账单。
+    llm_input_cost_per_1k: float = Field(default=0.00027, ge=0)
+    llm_output_cost_per_1k: float = Field(default=0.0011, ge=0)
+
+    # Amazon adapter: opt-in, sandbox by default, operator read access only.
+    amazon_enabled: bool = False
+    amazon_sandbox: bool = True
+    amazon_region: Literal["na", "eu", "fe"] = "na"
+    amazon_marketplace_id: str = ""
+    amazon_client_id: SecretStr = SecretStr("")
+    amazon_client_secret: SecretStr = SecretStr("")
+    amazon_refresh_token: SecretStr = SecretStr("")
 
     # ===== 17TRACK =====
     tracking_api_key: str = ""

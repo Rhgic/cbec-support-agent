@@ -5,6 +5,7 @@
 datasets/adversarial.jsonl 评测（见 locust / eval 说明），不在本接口内——它们依赖
 人工标注集，不是运行中聚合量。
 """
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 
@@ -62,9 +63,7 @@ def summary(
         cost = runs.with_entities(func.coalesce(func.sum(AgentRun.cost_usd), 0.0)).scalar() or 0.0
 
         by_lang = dict(tickets.with_entities(Ticket.lang, func.count()).group_by(Ticket.lang).all())
-        by_intent = dict(
-            tickets.with_entities(Ticket.intent, func.count()).group_by(Ticket.intent).all()
-        )
+        by_intent = dict(tickets.with_entities(Ticket.intent, func.count()).group_by(Ticket.intent).all())
 
         return {
             "total": total,
@@ -79,3 +78,86 @@ def summary(
         }
     finally:
         db.close()
+
+
+@router.get("/metrics/operations")
+def operations(token: str = Depends(require_token)):
+    """Live operational snapshot; synthetic evaluation tickets are always excluded."""
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import select
+
+    now = datetime.now(UTC)
+    with SessionLocal() as db:
+        live = Ticket.eval_run_id.is_(None)
+        counts = dict(db.execute(select(Ticket.status, func.count()).where(live).group_by(Ticket.status)).all())
+        stale = (
+            db.scalar(
+                select(func.count())
+                .select_from(Ticket)
+                .where(
+                    live, Ticket.status.in_(["processing", "retrying"]), Ticket.updated_at < now - timedelta(minutes=20)
+                )
+            )
+            or 0
+        )
+        oldest = db.scalar(
+            select(func.min(Ticket.created_at)).where(live, Ticket.status.in_(["processing", "retrying"]))
+        )
+        attempts = (
+            select(
+                AgentRun.ticket_id,
+                func.sum(AgentRun.latency_ms).label("ms"),
+            )
+            .join(Ticket, Ticket.id == AgentRun.ticket_id)
+            .where(live)
+            .group_by(AgentRun.ticket_id)
+            .subquery()
+        )
+        latency = db.execute(
+            select(
+                func.count(),
+                func.percentile_cont(0.5).within_group(attempts.c.ms),
+                func.percentile_cont(0.95).within_group(attempts.c.ms),
+            ).select_from(attempts)
+        ).one()
+        cost = (
+            db.scalar(
+                select(func.coalesce(func.sum(AgentRun.cost_usd), 0))
+                .join(Ticket, Ticket.id == AgentRun.ticket_id)
+                .where(live)
+            )
+            or 0
+        )
+        measured = (
+            db.scalar(
+                select(func.count(func.distinct(AgentRun.ticket_id)))
+                .join(Ticket, Ticket.id == AgentRun.ticket_id)
+                .where(live, AgentRun.cost_usd.is_not(None))
+            )
+            or 0
+        )
+        alerts = []
+        if stale:
+            alerts.append(
+                {"code": "stale_processing", "count": stale, "message": "存在长时间未完成工单，请检查 worker"}
+            )
+        if counts.get("failed", 0):
+            alerts.append(
+                {"code": "failed_tickets", "count": counts["failed"], "message": "存在失败工单，可检查记录后重试"}
+            )
+        if counts.get("deferred", 0):
+            alerts.append(
+                {"code": "deferred_tickets", "count": counts["deferred"], "message": "存在预算延期工单，请核对预算"}
+            )
+        return {
+            "generated_at": now,
+            "by_status": counts,
+            "stale_processing": stale,
+            "oldest_processing_age_seconds": max(0, (now - oldest).total_seconds()) if oldest else None,
+            "agent_processing_ms": {"sample_count": latency[0], "p50": latency[1], "p95": latency[2]},
+            "estimated_cost_usd": float(cost),
+            "cost_sample_count": measured,
+            "avg_estimated_cost_usd": float(cost) / measured if measured else None,
+            "alerts": alerts,
+        }

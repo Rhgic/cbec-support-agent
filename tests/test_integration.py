@@ -96,3 +96,46 @@ def test_postgres_checkpoint_roundtrip():
         assert _resume_graph(graph, {"ticket_id": 1}, config)["masked_text"] == "safe"
         assert _resume_graph(graph, {"ticket_id": 1}, config)["masked_text"] == "safe"
         assert calls == [1]
+
+
+def test_live_queue_and_operations_exclude_evaluation_data():
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.database import SessionLocal
+    from app.models import AgentRun, Ticket
+    from app.routers import metrics, tickets
+
+    with SessionLocal() as db:
+        online = Ticket(raw_text="private@example.com", masked_text="[EMAIL_1]", status="failed")
+        synthetic = Ticket(raw_text="synthetic", status="failed", eval_run_id=str(uuid4()))
+        db.add_all([online, synthetic])
+        db.flush()
+        tid = online.id
+        db.add_all(
+            [
+                AgentRun(ticket_id=tid, node="classify", latency_ms=10, ok=True, cost_usd=0.1),
+                AgentRun(ticket_id=tid, node="generate", latency_ms=30, ok=True, cost_usd=0.1),
+                AgentRun(ticket_id=synthetic.id, node="generate", latency_ms=999999, ok=True, cost_usd=100),
+            ]
+        )
+        db.commit()
+    app = FastAPI()
+    app.include_router(tickets.router)
+    app.include_router(metrics.router)
+    headers = {"Authorization": "Bearer dev-token"}
+    with TestClient(app) as client:
+        response = client.get(f"/tickets?status=failed&after_id={tid - 1}&limit=1", headers=headers)
+        assert response.status_code == 200
+        page = response.json()
+        assert [t["ticket_id"] for t in page["items"]] == [tid]
+        assert page["items"][0]["customer_message"] == "[EMAIL_1]"
+        assert "private@example.com" not in response.text
+        assert page["next_cursor"] is None
+        assert client.get("/tickets?status=invalid", headers=headers).status_code == 422
+        result = client.get("/metrics/operations", headers=headers)
+        assert result.status_code == 200
+        snapshot = result.json()
+        assert snapshot["estimated_cost_usd"] == pytest.approx(0.2)
+        assert snapshot["agent_processing_ms"]["p50"] == 40
+        assert any(alert["code"] == "failed_tickets" for alert in snapshot["alerts"])

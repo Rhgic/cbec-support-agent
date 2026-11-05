@@ -62,6 +62,7 @@ class TicketOut(BaseModel):
     retrieval_score: float | None = None
     short_circuited: bool | None = None
     draft_reply: str | None = None
+    customer_message: str | None = None
     citations: list[str] = []
     risk_level: str | None = None
     action: str | None = None

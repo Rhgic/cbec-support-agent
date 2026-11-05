@@ -12,7 +12,7 @@ from app.observability import (
     metrics_endpoint,
     request_id_middleware,
 )
-from app.routers import health, knowledge, metrics, review, tickets
+from app.routers import amazon, health, knowledge, metrics, review, tickets
 
 
 def create_app() -> FastAPI:
@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
     app.add_api_route("/metrics", metrics_endpoint, methods=["GET"])
     app.include_router(health.router)
     app.include_router(tickets.router)
+    app.include_router(amazon.router)
     app.include_router(review.router)
     app.include_router(knowledge.router)
     app.include_router(metrics.router)

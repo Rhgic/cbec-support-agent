@@ -38,6 +38,7 @@ def record_agent_run(
     error: str | None = None,
 ) -> None:
     """写入一条节点级执行记录（agent_runs）。"""
+    NODE_LATENCY.labels(node=node).observe(latency_ms / 1000)
     db.add(
         AgentRun(
             ticket_id=ticket_id,

@@ -7,7 +7,7 @@ GET  /tickets/{id}/trace：agent_runs 全链路，供演示
 """
 
 from arq.connections import RedisSettings
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, text
 
 from app.auth import require_token
@@ -85,29 +85,62 @@ async def create_ticket(
     return {"ticket_id": tid, "task_id": task_id}
 
 
+def _ticket_out(t: Ticket) -> TicketOut:
+    return TicketOut(
+        ticket_id=t.id,
+        status=t.status,
+        lang=t.lang,
+        intent=t.intent,
+        intent_confidence=t.intent_confidence,
+        intent_method=t.intent_method,
+        retrieval_score=t.retrieval_score,
+        short_circuited=t.short_circuited,
+        draft_reply=t.draft_reply,
+        customer_message=t.masked_text,
+        citations=t.citations or [],
+        risk_level=t.risk_level,
+        action=t.action,
+    )
+
+
+@router.get("/tickets")
+def list_tickets(
+    token: str = Depends(require_token),
+    status: str | None = Query(None),
+    after_id: int = Query(0, ge=0),
+    limit: int = Query(25, ge=1, le=100),
+):
+    allowed = {
+        "processing",
+        "retrying",
+        "awaiting_review",
+        "ready_to_send",
+        "failed",
+        "deferred",
+        "refused",
+        "sent",
+        "closed",
+    }
+    if status is not None and status not in allowed:
+        raise HTTPException(status_code=422, detail="不支持的工单状态")
+    with SessionLocal() as db:
+        stmt = select(Ticket).where(Ticket.id > after_id, Ticket.eval_run_id.is_(None))
+        if status:
+            stmt = stmt.where(Ticket.status == status)
+        rows = db.scalars(stmt.order_by(Ticket.id).limit(limit + 1)).all()
+        return {
+            "items": [_ticket_out(t) for t in rows[:limit]],
+            "next_cursor": rows[limit - 1].id if len(rows) > limit else None,
+        }
+
+
 @router.get("/tickets/{ticket_id}", response_model=TicketOut)
 def get_ticket(ticket_id: int, token: str = Depends(require_token)):
-    db = SessionLocal()
-    try:
-        t = db.get(Ticket, ticket_id)
-        if t is None:
+    with SessionLocal() as db:
+        ticket = db.get(Ticket, ticket_id)
+        if ticket is None:
             raise HTTPException(status_code=404, detail="工单不存在")
-        return TicketOut(
-            ticket_id=t.id,
-            status=t.status,
-            lang=t.lang,
-            intent=t.intent,
-            intent_confidence=t.intent_confidence,
-            intent_method=t.intent_method,
-            retrieval_score=t.retrieval_score,
-            short_circuited=t.short_circuited,
-            draft_reply=t.draft_reply,
-            citations=t.citations or [],
-            risk_level=t.risk_level,
-            action=t.action,
-        )
-    finally:
-        db.close()
+        return _ticket_out(ticket)
 
 
 @router.get("/tickets/{ticket_id}/trace", response_model=TicketTrace)
@@ -170,8 +203,6 @@ async def retry_ticket(ticket_id: int, token: str = Depends(require_token)):
         job = await redis.enqueue_job("process_ticket", ticket_id, _job_id=f"retry:{ticket_id}:{uuid4().hex}")
         if job is None:
             raise RuntimeError("任务未入队")
-        ticket.status = "processing"
-        db.commit()
         return {"ticket_id": ticket_id, "task_id": job.job_id}
     except HTTPException:
         raise

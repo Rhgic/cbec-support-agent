@@ -5,12 +5,12 @@
  * 文案用中文；后端真实字段值（节点名 / action / 语种码 / rule·llm）保留英文等宽。
  */
 // 静态页面默认明确使用样例模式；scripts/demo_server.py 同源伺服时会替换为 false。
-const USE_MOCK = true;
+let USE_MOCK = true;
 const API = { base: window.location.origin, token: "dev-token" };
 const NODES = ["mask", "classify", "retrieve", "tools", "generate", "risk_gate"];
 const NODE_CN = { mask: "脱敏", classify: "分类", retrieve: "检索", tools: "工具", generate: "生成", risk_gate: "风险闸门" };
 const VERDICT = {
-  low:  { head: "已自动处理", action: "auto_send",      tag: "已自动回复" },
+  low:  { head: "已自动处理", action: "auto_send",      tag: "回复已生成，待发送" },
   mid:  { head: "等待快速确认", action: "quick_review",   tag: "需要确认" },
   high: { head: "等待你的审核", action: "human_required", tag: "需要审核" },
 };
@@ -98,11 +98,12 @@ let selectedId = null;
 function renderList() {
   const box = $("#tickets");
   box.innerHTML = "";
-  const ids = [...LIVE_TICKET_IDS, ...ORDER.map((k) => SAMPLES[k].ticket.ticket_id)];
+  const ids = USE_MOCK ? ORDER.map((k) => SAMPLES[k].ticket.ticket_id) : LIVE_TICKET_IDS;
   ids.forEach((id) => {
     const sample = byId[id];
     if (!sample) return;
     const t = sample.ticket;
+    if ($("#status-filter").value && t.status !== $("#status-filter").value) return;
     const row = document.createElement("div");
     row.className = "tk" + (t.ticket_id === selectedId ? " active" : "");
     row.tabIndex = 0;
@@ -119,7 +120,7 @@ function renderList() {
     row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectTicket(t.ticket_id); } };
     box.appendChild(row);
   });
-  $("#tk-count").textContent = ids.length + " 条";
+  $("#tk-count").textContent = box.children.length + " 条";
 }
 
 function upsertTicket(sample, { select = false, realtime = false } = {}) {
@@ -131,10 +132,17 @@ function upsertTicket(sample, { select = false, realtime = false } = {}) {
   if (select) renderDetail(sample);
 }
 
-function selectTicket(id) {
+async function selectTicket(id) {
   selectedId = id;
   renderList();
   renderDetail(byId[id]);
+  if (!USE_MOCK) {
+    try {
+      const [ticket, trace] = await Promise.all([getTicket(id), getTrace(id)]);
+      byId[id] = { ticket, trace };
+      if (selectedId === id) renderDetail(byId[id]);
+    } catch (error) { showToast(`读取工单失败：${error.message}`, "error"); }
+  }
 }
 
 /* ---------------- 详情：围绕「5 秒内做决定」排序 ----------------
@@ -146,8 +154,13 @@ function renderDetail(sample) {
   el.innerHTML =
     detailHead(t) +
     workHtml(t) +
-    traceFoldHtml(trace);
+    traceFoldHtml(trace) +
+    `<details class="audit-history"><summary>审核记录与最终回复</summary><button class="text-action" data-history>加载审核记录</button><div id="review-history"></div></details>`;
   renderTrace(t, trace);
+  el.querySelector("[data-history]").addEventListener("click", (event) => loadHistory(t.ticket_id, event.currentTarget));
+  el.querySelectorAll("[data-retry]").forEach((button) => {
+    button.addEventListener("click", () => retryTicket(t, button));
+  });
   el.querySelectorAll("[data-review]").forEach((button) => {
     button.addEventListener("click", () => submitReview(button.dataset.review, t));
   });
@@ -205,7 +218,7 @@ function renderTrace(ticket, trace) {
 
 /* 签名元素：裁决通道带 —— 像海关的绿色/红色通道，动词是全页最大的字 */
 function channelHtml(t) {
-  const lvl = t.risk_level || "high";
+  const lvl = VERDICT[t.risk_level] ? t.risk_level : "high";
   const v = VERDICT[lvl];
   const why = lvl === "high" && t.short_circuited
     ? "没有可依据的答案 —— 检索分数低于阈值，Agent 不会猜。"
@@ -219,7 +232,8 @@ function channelHtml(t) {
         `<button class="text-action" data-review="rejected">退回重办</button>` +
         `<div class="review-help">先核对退款金额与到账时效；确认无误后点击“确认待发送”。</div>` +
       `</div>`
-    : "";
+    : (["failed", "deferred"].includes(t.status)
+      ? `<div class="decision-actions"><button class="btn btn-primary" data-retry>重新处理工单</button><div class="review-help">重新生成回复会再次调用模型。</div></div>` : "");
   return `<div class="channel ${lvl}">` +
     `<div class="ch-edge" aria-hidden="true"></div>` +
     `<div class="ch-main"><div class="ch-kicker">Agent 建议</div><div class="ch-verb">${v.tag}</div><div class="ch-why">${why}</div>${actions}</div>` +
@@ -427,12 +441,16 @@ async function pollTicket(id, tries = 40) {
   throw new Error("等待处理超时");
 }
 
+const pendingReviews = new Set();
 async function submitReview(action, ticket) {
   let finalReply = null;
   if (action === "edited") {
     finalReply = window.prompt("修改待发送回复：", ticket.draft_reply || "");
     if (finalReply === null) return;
+    if (!finalReply.trim()) { showToast("修改回复不能为空", "error"); return; }
   }
+  if (pendingReviews.has(ticket.ticket_id)) return;
+  pendingReviews.add(ticket.ticket_id);
   try {
     let updated;
     if (USE_MOCK) {
@@ -454,7 +472,7 @@ async function submitReview(action, ticket) {
     showToast(action === "rejected" ? "工单已退回重办；未向客户外发消息" : "审核状态已更新；未向客户外发消息", action === "rejected" ? "warn" : "success");
   } catch (e) {
     showToast(`审核操作失败：${e.message || e}`, "error");
-  }
+  } finally { pendingReviews.delete(ticket.ticket_id); }
 }
 
 function showToast(message, kind = "success") {
@@ -484,7 +502,12 @@ async function initFeed() {
   try {
     const r = await fetch(`${API.base}/health`, { cache: "no-store" });
     if (!r.ok) throw new Error("health check failed");
-    initRealtime();
+    const health = await r.json();
+    loadTickets(true);
+    if (health.mode === "live_demo") {
+      $("#operations").textContent = "实时演示使用内存工单；运行统计请连接主服务。";
+      initRealtime();
+    } else { setFeed("live", "后台已连接"); refreshOperations(); }
   } catch (_) {
     setFeed("down", "后端不可用");
   }
@@ -492,7 +515,9 @@ async function initFeed() {
 
 function initRealtime() {
   if (USE_MOCK || !window.EventSource) return;
+  if (initRealtime.stream) initRealtime.stream.close();
   const stream = new EventSource(`${API.base}/events?token=${encodeURIComponent(API.token)}`);
+  initRealtime.stream = stream;
   stream.addEventListener("open", () => setFeed("live", "实时会话已连接"));
   stream.addEventListener("agent_suggestion", (event) => {
     try {
@@ -521,5 +546,140 @@ $("#ticket-input").addEventListener("keydown", (e) => {
 });
 /* ---------------- 初始 ---------------- */
 renderList();
-selectTicket(SAMPLES.refund.ticket.ticket_id); // 首屏明确展示唯一需要人工处理的工单
+if (USE_MOCK) selectTicket(SAMPLES.refund.ticket.ticket_id);
 initFeed();
+
+
+let nextCursor = 0;
+let queueRequest = 0;
+async function loadTickets(reset = false) {
+  if (USE_MOCK) { renderList(); return; }
+  const request = ++queueRequest;
+  $("#queue-message").textContent = "正在加载…";
+  $("#load-more").disabled = true;
+  try {
+    const params = new URLSearchParams({ limit: "25", after_id: reset ? "0" : String(nextCursor) });
+    if ($("#status-filter").value) params.set("status", $("#status-filter").value);
+    const page = await apiJson(`/tickets?${params}`);
+    if (request !== queueRequest) return;
+    if (reset) LIVE_TICKET_IDS.splice(0);
+    for (const ticket of page.items) {
+      byId[ticket.ticket_id] = { ticket, trace: byId[ticket.ticket_id]?.trace || { runs: [] } };
+      if (!LIVE_TICKET_IDS.includes(ticket.ticket_id)) LIVE_TICKET_IDS.push(ticket.ticket_id);
+    }
+    nextCursor = page.next_cursor;
+    $("#load-more").hidden = nextCursor === null;
+    $("#queue-message").textContent = LIVE_TICKET_IDS.length ? "" : "当前筛选下没有工单";
+    renderList();
+    if (reset) {
+      if (LIVE_TICKET_IDS.length) selectTicket(LIVE_TICKET_IDS[0]);
+      else { selectedId = null; $("#detail").textContent = "请选择其他工单状态，或接收一条新消息。"; }
+    }
+  } catch (error) {
+    if (request === queueRequest) $("#queue-message").textContent = `加载失败：${error.message}`;
+  } finally { if (request === queueRequest) $("#load-more").disabled = false; }
+}
+
+async function apiJson(path, options = {}) {
+  const response = await fetch(`${API.base}${path}`, { ...options, headers: authh() });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : `请求失败（${response.status}）`);
+  return data;
+}
+
+async function retryTicket(ticket, button) {
+  button.disabled = true;
+  try {
+    if (USE_MOCK) { showToast("样例工单不能重新调用模型，请连接真实服务。", "warn"); return; }
+    await apiJson(`/tickets/${ticket.ticket_id}/retry`, { method: "POST" });
+    const updated = await getTicket(ticket.ticket_id);
+    upsertTicket({ ticket: updated, trace: { runs: [] } }, { select: true, realtime: true });
+    showToast("工单已重新入队，可刷新查看进度。");
+    refreshOperations();
+  } catch (error) { showToast(`重试失败：${error.message}`, "error"); }
+  finally { button.disabled = false; }
+}
+
+async function loadHistory(id, button) {
+  button.disabled = true;
+  const target = $("#review-history");
+  try {
+    if (USE_MOCK) { target.textContent = "样例工单没有数据库审核记录。"; return; }
+    const page = await apiJson(`/review/${id}/history`);
+    if (selectedId !== id) return;
+    target.replaceChildren();
+    if (!page.items.length) target.textContent = "暂无审核记录";
+    for (const item of page.items) {
+      const row = document.createElement("div");
+      row.className = "audit-entry";
+      row.textContent = `${item.created_at || ""} · ${{approved:"通过",edited:"修改通过",rejected:"拒绝"}[item.action] || item.action}\n原草稿：${item.draft_reply || "—"}\n最终回复：${item.final_reply || "—"}`;
+      target.appendChild(row);
+    }
+    if (page.next_cursor !== null) target.append("当前显示前 50 条审核记录。");
+  } catch (error) { if (selectedId === id) target.textContent = `读取失败：${error.message}`; }
+  finally { button.disabled = false; }
+}
+
+async function refreshOperations() {
+  if (USE_MOCK) return;
+  const target = $("#operations");
+  try {
+    const data = await apiJson("/metrics/operations");
+    const format = value => value == null ? "暂无数据" : `${Math.round(value)} ms`;
+    target.replaceChildren();
+    const values = document.createElement("div");
+    values.className = "ops-values";
+    values.textContent = `待审核 ${data.by_status.awaiting_review || 0} · 失败 ${data.by_status.failed || 0} · 延期 ${data.by_status.deferred || 0} · 节点累计耗时 P50 ${format(data.agent_processing_ms.p50)} / P95 ${format(data.agent_processing_ms.p95)} · 已记录估算费用 $${data.estimated_cost_usd.toFixed(5)}`;
+    target.appendChild(values);
+    for (const alert of data.alerts) {
+      const row = document.createElement("div"); row.className = "ops-alert";
+      row.textContent = `${alert.message}（${alert.count} 条）`; target.appendChild(row);
+    }
+    const note = document.createElement("small");
+    note.textContent = `仅统计真实工单；耗时为各节点累计执行时间，包含重试，不含排队和人工等待。费用是模型配置价估算，样本 ${data.cost_sample_count} 张工单。`;
+    target.appendChild(note);
+  } catch (error) { target.textContent = `运行指标不可用：${error.message}`; }
+}
+
+$("#status-filter").addEventListener("change", () => loadTickets(true));
+$("#refresh-tickets").addEventListener("click", () => loadTickets(true));
+$("#load-more").addEventListener("click", () => loadTickets(false));
+$("#refresh-operations").addEventListener("click", refreshOperations);
+
+
+$("#connect-api").addEventListener("submit", (event) => {
+  event.preventDefault();
+  try {
+    const base = new URL($("#api-base").value.trim());
+    if (!["http:", "https:"].includes(base.protocol) || base.username || base.password || base.search || base.hash) throw new Error("请输入有效的 HTTP API 地址");
+    if (!$("#api-token").value.trim()) throw new Error("访问令牌不能为空");
+    if (initRealtime.stream) initRealtime.stream.close();
+    API.base = base.href.replace(/\/$/, "");
+    API.token = $("#api-token").value.trim();
+    $("#api-token").value = "";
+    USE_MOCK = false;
+    LIVE_TICKET_IDS.splice(0); renderList();
+    $("#detail").textContent = "正在连接后台…";
+    initFeed();
+  } catch (error) { showToast(error.message, "error"); }
+});
+
+
+async function inspectAmazon(actions = false) {
+  const target = $("#amazon-result");
+  if (USE_MOCK) { target.textContent = "请先连接主服务，并在服务端配置 Amazon 卖家授权。"; return; }
+  const id = $("#amazon-order-id").value.trim();
+  if (!/^[0-9]{3}-[0-9]{7}-[0-9]{7}$/.test(id)) { target.textContent = "请输入 3-7-7 位格式的 Amazon 订单号。"; return; }
+  const buttons = $("#amazon-lookup").querySelectorAll("button");
+  buttons.forEach(button => button.disabled = true);
+  target.textContent = "正在查询 Amazon…";
+  try {
+    const data = await apiJson(`/integrations/amazon/orders/${encodeURIComponent(id)}${actions ? "/message-actions" : ""}`);
+    target.textContent = actions
+      ? `可用消息类型：${data.available_message_types.join("、") || "暂无"}。本页面仅查询，不发送消息。`
+      : `${data.sandbox ? "沙箱样例" : "Amazon"} · 订单 ${data.order_id} · 履约状态 ${data.fulfillment_status || "未知"} · 履约方 ${data.fulfilled_by || "未知"}`;
+  } catch (error) { target.textContent = `查询失败：${error.message}`; }
+  finally { buttons.forEach(button => button.disabled = false); }
+}
+$("#amazon-lookup").addEventListener("submit", event => { event.preventDefault(); inspectAmazon(false); });
+$("#amazon-actions").addEventListener("click", () => inspectAmazon(true));

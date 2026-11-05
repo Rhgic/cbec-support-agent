@@ -16,6 +16,7 @@
     .venv/bin/uvicorn scripts.demo_server:app --port 8100
 然后浏览器开 http://localhost:8100/
 """
+
 import os
 
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
@@ -26,6 +27,7 @@ import json
 import time
 from collections import defaultdict
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
@@ -266,6 +268,29 @@ async def events(token: str = Query(default="")):
     )
 
 
+@app.get("/tickets")
+def list_demo_tickets(
+    token: str = Depends(require_token),
+    status: str | None = None,
+    after_id: int = Query(0, ge=0),
+    limit: int = Query(25, ge=1, le=100),
+):
+    rows = [
+        value["ticket"]
+        for key, value in sorted(RESULTS.items())
+        if key > after_id and (status is None or value["ticket"].get("status") == status)
+    ]
+    return {"items": rows[:limit], "next_cursor": rows[limit - 1]["ticket_id"] if len(rows) > limit else None}
+
+
+@app.get("/review/{ticket_id}/history")
+def demo_history(ticket_id: int, token: str = Depends(require_token)):
+    result = RESULTS.get(ticket_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="工单不存在")
+    return {"items": result.get("reviews", []), "next_cursor": None}
+
+
 @app.get("/tickets/{ticket_id}")
 def get_ticket(ticket_id: int, token: str = Depends(require_token)):
     r = RESULTS.get(ticket_id)
@@ -303,6 +328,17 @@ def review_ticket(ticket_id: int, payload: ReviewIn, authorization: str | None =
         raise HTTPException(status_code=409, detail="工单不处于可审核状态")
     if payload.action == "edited" and not (payload.final_reply or "").strip():
         raise HTTPException(status_code=422, detail="修改通过必须提供非空回复")
+    result.setdefault("reviews", []).append(
+        {
+            "id": len(result.get("reviews", [])) + 1,
+            "action": payload.action,
+            "draft_reply": ticket.get("draft_reply"),
+            "final_reply": payload.final_reply
+            if payload.action == "edited"
+            else (ticket.get("draft_reply") if payload.action == "approved" else None),
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+    )
     ticket["status"] = "failed" if payload.action == "rejected" else "ready_to_send"
     if payload.action == "edited" and payload.final_reply:
         ticket["draft_reply"] = payload.final_reply
@@ -338,7 +374,7 @@ def translate(payload: TranslateIn, authorization: str | None = Header(default=N
 def live_appjs():
     # 伺服时把 USE_MOCK 置 false，切实时后端；源文件不改
     src = (WEB_DIR / "app.js").read_text(encoding="utf-8")
-    src = src.replace("const USE_MOCK = true", "const USE_MOCK = false")
+    src = src.replace("let USE_MOCK = true", "let USE_MOCK = false")
     return Response(content=src, media_type="application/javascript")
 
 
